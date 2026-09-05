@@ -1,3 +1,6 @@
+/* assets/dashboard.css */
+
+/* Dark mode defaults */
 :root {
     --background: #0f172a;
     --panel: #1e293b;
@@ -9,6 +12,63 @@
     --green: #22c55e;
     --yellow: #eab308;
     --red: #ef4444;
+}
+
+/* Light Mode Overrides */
+body.light-mode {
+    --background: #f8fafc;
+    --panel: #ffffff;
+    --panel-light: #f1f5f9;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --blue: #0284c7; /* Slightly darker blue for better contrast on white */
+    --green: #16a34a;
+    --yellow: #ca8a04;
+    --red: #dc2626;
+}
+
+/* Apply variables to your elements */
+body {
+    background-color: var(--background);
+    color: var(--text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.panel {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.muted-text {
+    color: var(--muted);
+}
+
+/* Toggle Button Specific Styles */
+.theme-toggle-btn {
+    background-color: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+    background-color: var(--panel-light);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle-btn:active {
+    transform: translateY(0);
 }
 
 * {

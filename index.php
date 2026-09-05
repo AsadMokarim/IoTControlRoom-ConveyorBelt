@@ -20,6 +20,10 @@
             <a href="http://localhost:5173">Digital Twin</a>
             <a href="#">Sensors</a>
             <a href="#">Alerts</a>
+            <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark Mode">
+              <span class="icon">🌓</span>
+              <span class="text">Switch to Light</span>
+            </button>
         </nav>
     </aside>
 
@@ -108,5 +112,6 @@
 
 <script src="assets/vendor/chart.js"></script>
 <script src="assets/js/dashboard.js"></script>
+<script src="assets/js/theme.js"></script>
 </body>
 </html>
