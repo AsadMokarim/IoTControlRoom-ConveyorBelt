@@ -10,26 +10,38 @@ function initTheme() {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     // Determine initial mode: saved preference > system preference > default (dark)
+    let isLightMode = false;
+
     if (savedTheme === 'light') {
-        document.body.classList.add('light-mode');
-        updateButtonText(true);
+        isLightMode = true;
     } else if (savedTheme === 'dark') {
-        document.body.classList.remove('light-mode');
-        updateButtonText(false);
+        isLightMode = false;
     } else {
-        // Default to dark if no preference exists and system is light, or vice versa
-        if (!prefersDark) {
-            document.body.classList.add('light-mode');
-            updateButtonText(true);
-        }
+        // Default to dark if no preference exists
+        isLightMode = !prefersDark;
     }
+
+    // Apply the mode
+    if (isLightMode) {
+        document.body.classList.add('light-mode');
+    } else {
+        document.body.classList.remove('light-mode');
+    }
+
+    updateButtonText(isLightMode);
 }
 
 /**
  * Toggle between light and dark mode
  */
 function toggleTheme() {
-    const isLight = document.body.classList.toggle('light-mode');
+    const isLight = !document.body.classList.contains('light-mode');
+
+    if (isLight) {
+        document.body.classList.add('light-mode');
+    } else {
+        document.body.classList.remove('light-mode');
+    }
 
     // Save preference
     localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
