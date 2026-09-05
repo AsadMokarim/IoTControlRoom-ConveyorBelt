@@ -17,7 +17,7 @@
             <a class="active" href="#">Overview</a>
             <a href="#">Thermal Map</a>
             <a href="#">Vibration</a>
-            <a href="#">Digital Twin</a>
+            <a href="http://localhost:5173">Digital Twin</a>
             <a href="#">Sensors</a>
             <a href="#">Alerts</a>
         </nav>
