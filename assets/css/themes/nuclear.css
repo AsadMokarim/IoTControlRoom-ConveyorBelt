@@ -1,0 +1,249 @@
+/* =========================================
+   THEME 1: NUCLEAR CONTROL ROOM OVERRIDES
+   ========================================= */
+
+:root {
+  /* 1. Neutralize the background (remove blue cast) */
+  --background: #0a0a0a;      /* True charcoal, near-black */
+  --panel: #111111;           /* Slightly lighter for depth */
+  --panel-light: #161616;     /* Hover states */
+
+  /* 2. The "Phosphor" Palette */
+  --text: #e5e5e5;            /* Off-white, softer than pure white */
+  --muted: #857a6a;           /* Dim amber-grey for secondary text */
+  --border: #2e2618;          /* Very dark amber-grey borders */
+
+  /* Primary Brand: Amber */
+  --primary: #f59e0b;         /* Amber-500 */
+  --primary-faint: rgba(245, 158, 11, 0.15);
+
+  /* Status Colors (Adjusted for AA contrast with white) */
+  --green: #4ade80;           /* Bright green for normal */
+  --yellow: #facc15;          /* Yellow for warning */
+  --red: #f87171;             /* Red for critical */
+  --gray: #78716c;            /* Off-line */
+}
+
+/* 3. Typography: IBM Plex Mono for numbers */
+body {
+  font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+  background: var(--background);
+  color: var(--text);
+}
+
+/* Force tabular numerals on all numbers for stability */
+strong, .kpi-card strong, #average-temperature, #maximum-temperature, #rms-vibration, #active-alerts {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* 4. Sidebar: Sharper, more industrial */
+.sidebar {
+  background: #080808;
+  border-right: 1px solid var(--border);
+  font-family: 'IBM Plex Mono', 'Courier New', monospace; /* Monospace nav */
+}
+
+.sidebar h2 {
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 14px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.sidebar a {
+  color: var(--muted);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 0; /* Kill rounded corners */
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+  background: transparent;
+  color: var(--text);
+  border-left-color: var(--primary);
+  padding-left: 16px; /* Slide text on hover */
+}
+
+/* 5. Main Content: Tighter spacing, no rounded corners */
+.main-content {
+  padding: 32px 36px;
+}
+
+.topbar h1 {
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text);
+}
+
+.topbar p {
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+}
+
+/* 6. KPI Cards: No radius, border-left accent */
+.kpi-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0; /* Sharp edges */
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  border-left: 4px solid var(--primary); /* Brand accent */
+}
+
+/* Add a subtle scanline effect */
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+.kpi-card span {
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+.kpi-card strong {
+  display: block;
+  margin-top: 16px;
+  font-size: 32px;
+  color: var(--text);
+  text-shadow: 0 0 8px var(--primary-faint); /* Subtle glow */
+}
+
+/* 7. Panels: Refined grid, sharper headers */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0; /* Sharp */
+  padding: 24px;
+}
+
+.panel-header h2 {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 14px;
+  margin: 0;
+}
+
+.panel-header span {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+/* 8. Thermal Map: Adjusted tiles */
+.thermal-tile {
+  border-radius: 0;
+  border: 1px solid var(--border);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Fix Contrast for Thermal Tiles */
+.temperature-normal { background: #4ade80; color: #000; } /* Light bg, dark text */
+.temperature-moderate { background: #facc15; color: #000; }
+.temperature-warning { background: #f97316; color: #000; }
+.temperature-critical { background: #ef4444; color: #000; }
+
+.thermal-tile strong {
+  color: #000; /* Always black on these bright tiles */
+  text-shadow: none;
+}
+
+/* 9. Status Badge: Glowing "Phosphor" look */
+.status-badge {
+  background: transparent;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: normal;
+  text-transform: uppercase;
+  border-radius: 0;
+  box-shadow: 0 0 10px var(--primary-faint);
+}
+
+.status-badge.normal {
+  color: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.2);
+}
+
+.status-badge.warning {
+  color: var(--yellow);
+  border-color: var(--yellow);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
+}
+
+.status-badge.critical {
+  color: var(--red);
+  border-color: var(--red);
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.2);
+}
+
+/* 10. Digital Twin Components */
+.machine-component {
+  border-radius: 0; /* Sharp */
+  font-family: 'IBM Plex Mono', monospace;
+  background: var(--panel-light);
+  border: 1px solid var(--border);
+}
+
+.machine-component.normal {
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: inset 0 0 10px var(--primary-faint);
+}
+
+.machine-component.warning {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.machine-component.offline {
+  border-color: var(--gray);
+  color: var(--gray);
+  opacity: 0.6;
+}
+
+/* 11. Alerts List: Linear, no cards */
+#alerts-list {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.alert-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+}
+
+.alert-item:last-child {
+  border-bottom: none;
+}
+
+/* 12. Chart.js Overrides for the theme */
+#vibration-chart {
+  background: var(--panel);
+  border: 1px solid var(--border);
+}

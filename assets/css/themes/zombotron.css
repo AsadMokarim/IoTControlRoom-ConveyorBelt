@@ -1,0 +1,386 @@
+/* =========================================
+   THEME: ZOMBOTRON (FLEX LAYOUT EDITION)
+   ========================================= */
+
+:root {
+  /* 1. The "Dark Matter" Background */
+  --background: #020403;
+  --panel: #0a0f0c;
+  --panel-light: #111812;
+
+  /* 2. The "Toxic" Palette */
+  --text: #00ff41;
+  --muted: #006633;
+  --border: #003311;
+
+  /* Brand/Primary */
+  --primary: #00ff41;
+  --primary-glow: rgba(0, 255, 65, 0.4);
+
+  /* Status Colors */
+  --status-normal: #00ff41;
+  --status-warning: #ff9d00;
+  --status-critical: #ff003c;
+  --status-offline: #4a4a4a;
+}
+
+/* 3. Typography */
+body {
+  font-family: 'Courier New', 'Courier', monospace;
+  background: var(--background);
+  color: var(--text);
+  text-shadow: 0 0 2px var(--primary-glow);
+  margin: 0;
+  overflow-x: hidden; /* Prevent horizontal scroll from flex */
+}
+
+/* 4. Global Layout: Flex Row */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: row; /* Sidebar and Main content side-by-side */
+}
+
+/* 5. Sidebar: Flex Column */
+.sidebar {
+  width: 260px;
+  background: #000502;
+  border-right: 1px solid var(--border);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0; /* Prevent sidebar from shrinking */
+  position: relative;
+  z-index: 10;
+}
+
+.sidebar::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+  background-size: 100% 2px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sidebar h2 {
+  color: var(--status-critical);
+  text-shadow: 0 0 5px var(--status-critical);
+  border-bottom: 2px solid var(--status-critical);
+  padding-bottom: 12px;
+  margin-top: 0;
+  margin-bottom: 24px;
+  letter-spacing: 0.3em;
+  font-size: 16px;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1; /* Push footer content down if needed */
+}
+
+.sidebar a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 12px;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  border-left: 2px solid transparent;
+  transition: all 0.1s linear;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+  background: transparent;
+  color: var(--primary);
+  border-left: 2px solid var(--primary);
+  padding-left: 16px;
+  text-shadow: 0 0 5px var(--primary);
+}
+
+/* 6. Main Content: Flex Column */
+.main-content {
+  flex: 1; /* Take up remaining space */
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* Vertical gap between sections */
+  position: relative;
+}
+
+/* CRT Vignette Effect */
+.main-content::after {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle, transparent 60%, rgba(0, 0, 0, 0.8) 100%);
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* 7. Topbar: Flex Row (Space Between) */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
+  gap: 16px;
+}
+
+.topbar h1 {
+  margin: 0;
+  color: var(--primary);
+  text-shadow: 0 0 8px var(--primary-glow);
+  letter-spacing: 0.15em;
+  font-size: 24px;
+}
+
+.topbar p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* 8. KPI Grid: Flex Row (Wrap) */
+.kpi-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.kpi-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 10px var(--border);
+  flex: 1 1 200px; /* Grow, Shrink, Basis 200px */
+  min-width: 200px;
+}
+
+.kpi-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: var(--primary);
+  opacity: 0.6;
+}
+
+.kpi-card span {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 12px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.kpi-card strong {
+  display: block;
+  font-size: 32px;
+  color: var(--primary);
+  text-shadow: 0 0 10px var(--primary-glow);
+  font-weight: bold;
+}
+
+/* 9. Dashboard Grid: Flex Row (Wrap) */
+.dashboard-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: stretch; /* Make panels equal height */
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 24px;
+  position: relative;
+  flex: 1 1 45%; /* Default: 2 columns, but allows wrapping */
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Make specific panels larger using flex-grow */
+.thermal-panel {
+  flex: 2 1 60%; /* Thermal map gets more space */
+}
+
+.digital-twin-panel {
+  flex: 1 1 35%; /* Digital twin gets less */
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.panel-header h2 {
+  margin: 0;
+  color: var(--primary);
+  text-shadow: 0 0 5px var(--primary-glow);
+  letter-spacing: 0.2em;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.panel-header span {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+/* 10. Thermal Map: Flex Grid inside */
+.thermal-map {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-grow: 1; /* Fill available height */
+}
+
+.thermal-tile {
+  flex: 1 1 45%; /* 2 columns inside thermal map */
+  min-height: 115px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.thermal-tile::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.1"/></svg>');
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.temperature-normal { background: #00ff41; color: #000; }
+.temperature-moderate { background: #ff9d00; color: #000; }
+.temperature-warning { background: #ff003c; color: #fff; }
+.temperature-critical { background: #ff0000; color: #fff; box-shadow: 0 0 15px #ff0000; }
+
+.thermal-tile strong {
+  font-size: 25px;
+  z-index: 1;
+}
+
+/* 11. Digital Twin: Flex Grid */
+.digital-twin {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  flex-grow: 1;
+}
+
+.machine-component {
+  flex: 1 1 45%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  font-weight: bold;
+  background: rgba(0, 255, 65, 0.05);
+  min-height: 80px;
+}
+
+.machine-component.normal {
+  border-color: var(--status-normal);
+  color: var(--status-normal);
+  box-shadow: inset 0 0 10px var(--status-normal);
+}
+
+.machine-component.warning {
+  border-color: var(--status-warning);
+  color: var(--status-warning);
+}
+
+.machine-component.offline {
+  border-color: var(--status-offline);
+  color: var(--status-offline);
+  opacity: 0.5;
+}
+
+/* 12. Status Badge */
+.status-badge {
+  background: transparent;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  padding: 8px 16px;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  box-shadow: 0 0 15px var(--primary-glow);
+  animation: pulse-breach 2s infinite;
+}
+
+@keyframes pulse-breach {
+  0% { box-shadow: 0 0 5px var(--primary-glow); }
+  50% { box-shadow: 0 0 20px var(--primary-glow); }
+  100% { box-shadow: 0 0 5px var(--primary-glow); }
+}
+
+.status-badge.normal { color: var(--status-normal); border-color: var(--status-normal); }
+.status-badge.warning { color: var(--status-warning); border-color: var(--status-warning); }
+.status-badge.critical { color: var(--status-critical); border-color: var(--status-critical); }
+
+/* 13. Alerts List */
+#alerts-list {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.alert-item {
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+}
+
+/* 14. Responsive: Stack on Mobile */
+@media (max-width: 900px) {
+  .app-shell {
+    flex-direction: column; /* Stack sidebar on top */
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar nav {
+    flex-direction: row; /* Horizontal nav on mobile */
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+
+  .sidebar a {
+    white-space: nowrap;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+  }
+
+  .sidebar a.active {
+    border-left: none;
+    border-bottom: 2px solid var(--primary);
+    padding-left: 12px;
+  }
+
+  .kpi-card, .panel {
+    flex: 1 1 100%; /* Full width on mobile */
+  }
+}

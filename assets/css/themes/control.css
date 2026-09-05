@@ -1,0 +1,738 @@
+/* =========================================================
+   Mission Control Theme Overrides
+   Append after the existing dashboard.css
+   ========================================================= */
+
+:root {
+    --background: #080d14;
+    --sidebar: #0b121b;
+    --panel: #111b26;
+    --panel-raised: #162433;
+    --panel-hover: #1b2d3e;
+
+    --text: #e6f1f7;
+    --muted: #7f96a8;
+    --subtle: #52697a;
+    --border: #263c4e;
+    --border-bright: #36566d;
+
+    --cyan: #45d7ff;
+    --cyan-dark: #12647d;
+    --green: #39d98a;
+    --yellow: #f2bd4b;
+    --red: #f06464;
+    --offline: #708391;
+}
+
+/* Base */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    background: var(--background);
+}
+
+body {
+    min-width: 320px;
+    background:
+        linear-gradient(rgba(69, 215, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(69, 215, 255, 0.025) 1px, transparent 1px),
+        var(--background);
+    background-size: 32px 32px;
+    color: var(--text);
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+/* Main application shell */
+
+.app-shell {
+    min-height: 100vh;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(69, 215, 255, 0.025),
+            transparent 28%,
+            transparent 72%,
+            rgba(69, 215, 255, 0.02)
+        );
+}
+
+/* Sidebar */
+
+.sidebar {
+    position: relative;
+    width: 250px;
+    padding: 28px 18px;
+    background:
+        linear-gradient(180deg, rgba(69, 215, 255, 0.035), transparent 35%),
+        var(--sidebar);
+    border-right: 1px solid var(--border);
+}
+
+.sidebar::before {
+    content: "SYSTEM / PLANT 04";
+    display: block;
+    margin: -8px 12px 10px;
+    color: var(--subtle);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+}
+
+.sidebar::after {
+    content: "●  LINK ESTABLISHED";
+    display: block;
+    position: absolute;
+    left: 30px;
+    bottom: 28px;
+    color: var(--green);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+}
+
+.sidebar h2 {
+    margin: 0 12px 34px;
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.sidebar h2::before {
+    content: "◆";
+    display: inline-block;
+    margin-right: 9px;
+    color: var(--cyan);
+    font-size: 12px;
+}
+
+.sidebar nav {
+    display: grid;
+    gap: 4px;
+}
+
+.sidebar nav::before {
+    content: "MONITORING";
+    margin: 0 12px 8px;
+    color: var(--subtle);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+}
+
+.sidebar a {
+    position: relative;
+    padding: 12px 14px 12px 18px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    transition:
+        color 160ms ease,
+        background 160ms ease,
+        border-color 160ms ease;
+}
+
+.sidebar a::before {
+    content: "›";
+    display: inline-block;
+    width: 16px;
+    color: var(--subtle);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    transition: color 160ms ease;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+    background: rgba(69, 215, 255, 0.07);
+    border-color: rgba(69, 215, 255, 0.22);
+    color: var(--text);
+}
+
+.sidebar a.active {
+    box-shadow: inset 3px 0 0 var(--cyan);
+}
+
+.sidebar a.active::before,
+.sidebar a:hover::before {
+    color: var(--cyan);
+}
+
+/* Main content */
+
+.main-content {
+    min-width: 0;
+    padding: 30px 34px 40px;
+}
+
+/* Top bar */
+
+.topbar {
+    position: relative;
+    align-items: flex-start;
+    margin-bottom: 26px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.topbar::after {
+    content: "CONTROL / OVERVIEW";
+    position: absolute;
+    right: 0;
+    bottom: 6px;
+    color: var(--subtle);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+}
+
+.topbar h1 {
+    margin: 0 0 8px;
+    color: var(--text);
+    font-size: clamp(24px, 3vw, 34px);
+    font-weight: 650;
+    letter-spacing: -0.04em;
+}
+
+.topbar p {
+    margin: 0;
+    color: var(--muted);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+}
+
+/* System status */
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border: 1px solid var(--border-bright);
+    border-radius: 3px;
+    background: rgba(69, 215, 255, 0.06);
+    color: var(--cyan);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.status-badge::before {
+    content: "●";
+    margin-right: 8px;
+    color: currentColor;
+    font-size: 9px;
+}
+
+/* KPI section */
+
+.kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.kpi-card {
+    position: relative;
+    min-height: 126px;
+    padding: 17px 18px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background:
+        linear-gradient(135deg, rgba(69, 215, 255, 0.045), transparent 60%),
+        var(--panel);
+}
+
+.kpi-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 38px;
+    height: 2px;
+    background: var(--cyan);
+}
+
+.kpi-card::after {
+    content: "LIVE";
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    color: var(--subtle);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+}
+
+.kpi-card span {
+    display: block;
+    color: var(--muted);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.kpi-card strong {
+    margin-top: 17px;
+    color: var(--text);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: clamp(22px, 2.5vw, 30px);
+    font-weight: 500;
+    letter-spacing: -0.07em;
+}
+
+/* Panels */
+
+.dashboard-grid {
+    gap: 12px;
+}
+
+.panel {
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background:
+        linear-gradient(145deg, rgba(69, 215, 255, 0.025), transparent 45%),
+        var(--panel);
+}
+
+.panel-header {
+    position: relative;
+    min-height: 25px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-header::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 28px;
+    height: 1px;
+    background: var(--cyan);
+}
+
+.panel-header h2 {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.panel-header span {
+    color: var(--muted);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* Thermal map */
+
+.thermal-map {
+    gap: 8px;
+}
+
+.thermal-tile {
+    position: relative;
+    min-height: 112px;
+    padding: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    background-color: var(--panel-raised);
+}
+
+.thermal-tile::before {
+    content: "ZONE";
+    position: absolute;
+    top: 10px;
+    right: 11px;
+    color: rgba(255, 255, 255, 0.38);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 8px;
+    letter-spacing: 0.12em;
+}
+
+.thermal-tile strong {
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 23px;
+    letter-spacing: -0.06em;
+}
+
+.temperature-normal {
+    background:
+        linear-gradient(135deg, rgba(57, 217, 138, 0.2), transparent 70%),
+        #12382e;
+    border-color: rgba(57, 217, 138, 0.42);
+}
+
+.temperature-moderate {
+    background:
+        linear-gradient(135deg, rgba(242, 189, 75, 0.2), transparent 70%),
+        #3a3020;
+    border-color: rgba(242, 189, 75, 0.42);
+}
+
+.temperature-warning {
+    background:
+        linear-gradient(135deg, rgba(240, 100, 100, 0.2), transparent 70%),
+        #3d2528;
+    border-color: rgba(240, 100, 100, 0.48);
+}
+
+.temperature-critical {
+    background:
+        linear-gradient(135deg, rgba(255, 54, 54, 0.26), transparent 70%),
+        #421b22;
+    border-color: var(--red);
+    box-shadow: inset 0 0 0 1px rgba(240, 100, 100, 0.12);
+}
+
+/* Chart */
+
+#vibration-chart {
+    display: block;
+    width: 100%;
+    min-height: 240px;
+}
+
+/* Digital twin */
+
+.digital-twin {
+    gap: 8px;
+    min-height: 180px;
+}
+
+.machine-component {
+    position: relative;
+    min-height: 82px;
+    border-width: 1px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.025);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.machine-component::before {
+    content: "■";
+    position: absolute;
+    top: 9px;
+    left: 10px;
+    font-size: 7px;
+}
+
+.machine-component.normal {
+    border-color: rgba(57, 217, 138, 0.55);
+    color: var(--green);
+}
+
+.machine-component.warning {
+    border-color: rgba(242, 189, 75, 0.65);
+    color: var(--yellow);
+}
+
+.machine-component.offline {
+    border-color: rgba(112, 131, 145, 0.6);
+    color: var(--offline);
+}
+
+/* Alerts */
+
+#alerts-list {
+    min-height: 180px;
+    color: var(--muted);
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+/* Focus states */
+
+a:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+/* Responsive behavior */
+
+@media (max-width: 1100px) {
+    .main-content {
+        padding: 26px 24px 34px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .sidebar {
+        display: none;
+    }
+
+    .main-content {
+        padding: 24px 20px 32px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    .main-content {
+        padding: 18px 14px 24px;
+    }
+
+    .kpi-grid,
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .topbar {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .topbar::after {
+        display: none;
+    }
+
+    .topbar .status-badge {
+        align-self: flex-start;
+    }
+
+    .thermal-map {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 420px) {
+    .thermal-map {
+        grid-template-columns: 1fr;
+    }
+
+    .digital-twin {
+        grid-template-columns: 1fr;
+    }
+}
+/* =========================================================
+   Consistent Grid-Based Layout
+   ========================================================= */
+
+/* Overall application structure */
+
+.app-shell {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    min-height: 100vh;
+}
+
+/* Sidebar layout */
+
+.sidebar {
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    align-content: start;
+}
+
+/* Main content layout */
+
+.main-content {
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    align-content: start;
+    gap: 0;
+    min-width: 0;
+}
+
+/* Header remains a two-column grid */
+
+.topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 24px;
+}
+
+/* KPI cards */
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+}
+
+/* Main dashboard panels */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: minmax(260px, auto);
+    align-items: stretch;
+}
+
+/* Ensure panels fill their grid cells */
+
+.panel {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Thermal map */
+
+.thermal-panel {
+    grid-column: span 1;
+}
+
+.thermal-map {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    min-height: 0;
+}
+
+/* Thermal tiles */
+
+.thermal-tile {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    align-items: end;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Chart panel */
+
+#vibration-chart {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 240px;
+}
+
+/* Digital twin */
+
+.digital-twin-panel {
+    grid-column: span 1;
+}
+
+.digital-twin {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    min-height: 0;
+}
+
+/* Machine components */
+
+.machine-component {
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Alert content */
+
+#alerts-list {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    min-height: 180px;
+}
+
+/* Responsive grid behavior */
+
+@media (max-width: 1100px) {
+    .app-shell {
+        grid-template-columns: 220px minmax(0, 1fr);
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .app-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 650px) {
+    .topbar {
+        grid-template-columns: 1fr;
+    }
+
+    .kpi-grid,
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .thermal-panel,
+    .digital-twin-panel {
+        grid-column: span 1;
+    }
+
+    .dashboard-grid {
+        grid-auto-rows: auto;
+    }
+
+    .thermal-map {
+        min-height: 250px;
+    }
+
+    .digital-twin {
+        min-height: 260px;
+    }
+}
+
+@media (max-width: 420px) {
+    .thermal-map,
+    .digital-twin {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+    }
+
+    .thermal-tile,
+    .machine-component {
+        min-height: 100px;
+    }
+}
