@@ -39,27 +39,97 @@
             </div>
         </header>
 
-        <section class="kpi-grid">
-            <div class="kpi-card">
-                <span>Average Temperature</span>
-                <strong id="average-temperature">-- °C</strong>
+        <section class="widget-grid">
+
+            <div class="widget gauge-widget">
+                <div class="widget-title">
+                    <span>Average Temperature</span>
+                    <span class="widget-icon">🌡</span>
+                </div>
+
+                <div class="gauge"
+                     id="average-temperature-gauge"
+                     style="--value: 0deg; --gauge-color: #38bdf8;">
+                    <div class="gauge-inner">
+                        <strong id="average-temperature">--</strong>
+                        <small>°C</small>
+                    </div>
+                </div>
+
+                <div class="scale">
+                    <span>0</span>
+                    <span>50</span>
+                    <span>100</span>
+                </div>
             </div>
 
-            <div class="kpi-card">
-                <span>Maximum Temperature</span>
-                <strong id="maximum-temperature">-- °C</strong>
+            <div class="widget gauge-widget">
+                <div class="widget-title">
+                    <span>Maximum Temperature</span>
+                    <span class="widget-icon">🔥</span>
+                </div>
+
+                <div class="gauge"
+                     id="maximum-temperature-gauge"
+                     style="--value: 0deg; --gauge-color: #22c55e;">
+                    <div class="gauge-inner">
+                        <strong id="maximum-temperature">--</strong>
+                        <small>°C</small>
+                    </div>
+                </div>
+
+                <div class="scale">
+                    <span>0</span>
+                    <span>50</span>
+                    <span>100</span>
+                </div>
             </div>
 
-            <div class="kpi-card">
-                <span>RMS Vibration</span>
-                <strong id="rms-vibration">-- mm/s</strong>
+            <div class="widget meter-widget">
+                <div class="widget-title">
+                    <span>RMS Vibration</span>
+                    <span class="widget-icon">〽</span>
+                </div>
+
+                <div class="audio-meter" id="vibration-meter">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <div class="meter-value">
+                    <strong id="rms-vibration">--</strong>
+                    <small>mm/s</small>
+                </div>
             </div>
 
-            <div class="kpi-card">
-                <span>Active Alerts</span>
-                <strong id="active-alerts">--</strong>
+            <div class="widget alert-widget">
+                <div class="widget-title">
+                    <span>Active Alerts</span>
+                    <span class="widget-icon">⚠</span>
+                </div>
+
+                <div class="alert-ring" id="alert-ring">
+                    <div>
+                        <strong id="active-alerts">--</strong>
+                        <small>ACTIVE</small>
+                    </div>
+                </div>
+
+                <div id="alert-summary">System monitoring normally</div>
             </div>
+
         </section>
+
 
         <section class="dashboard-grid">
 
@@ -72,14 +142,17 @@
                 <div id="thermal-map" class="thermal-map"></div>
             </div>
 
-            <div class="panel">
+            <div class="panel chart-panel">
                 <div class="panel-header">
                     <h2>Vibration Telemetry</h2>
-                    <span>RMS vibration</span>
+                    <span class="live-indicator">● LIVE</span>
                 </div>
 
-                <canvas id="vibration-chart"></canvas>
+                <div class="chart-wrapper">
+                    <canvas id="vibration-chart"></canvas>
+                </div>
             </div>
+
 
             <div class="panel digital-twin-panel">
                 <div class="panel-header">

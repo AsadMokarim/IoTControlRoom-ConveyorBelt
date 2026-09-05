@@ -18,17 +18,47 @@ const vibrationChart = new Chart(
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             animation: false,
+
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+
+            interaction: {
+                intersect: false,
+                mode: "index"
+            },
+
             scales: {
+                x: {
+                    grid: {
+                        color: "rgba(148, 163, 184, 0.08)"
+                    },
+                    ticks: {
+                        color: "#7890aa",
+                        maxTicksLimit: 6
+                    }
+                },
                 y: {
                     beginAtZero: true,
+                    grid: {
+                        color: "rgba(148, 163, 184, 0.08)"
+                    },
+                    ticks: {
+                        color: "#7890aa"
+                    },
                     title: {
                         display: true,
-                        text: "mm/s"
+                        text: "mm/s",
+                        color: "#7890aa"
                     }
                 }
             }
         }
+
     }
 );
 
@@ -57,18 +87,113 @@ function updateThermalMap(zones) {
     });
 }
 
+function clamp(value, min, max) {
+    return Math.min(Math.max(Number(value) || 0, min), max);
+}
+
+function updateGauge(id, value, maximum = 100) {
+    const gauge = document.getElementById(id);
+    const percentage = clamp(value, 0, maximum) / maximum;
+
+    // The visible gauge covers 270 degrees.
+    const degrees = `${percentage * 270}deg`;
+
+    gauge.style.setProperty("--value", degrees);
+
+    if (value >= 85) {
+        gauge.style.setProperty("--gauge-color", "#ef4444");
+    } else if (value >= 70) {
+        gauge.style.setProperty("--gauge-color", "#facc15");
+    } else {
+        gauge.style.setProperty("--gauge-color", "#38bdf8");
+    }
+}
+
+function updateVibrationMeter(value) {
+    const meterBars = document.querySelectorAll("#vibration-meter span");
+
+    // Adjust this according to the expected maximum vibration.
+    const percentage = clamp(value, 0, 20) / 20;
+    const activeBars = Math.ceil(percentage * meterBars.length);
+
+    meterBars.forEach((bar, index) => {
+        const isActive = index < activeBars;
+
+        bar.style.opacity = isActive ? "1" : "0.15";
+
+        if (value >= 15 && isActive) {
+            bar.style.background = "#ef4444";
+        } else if (value >= 8 && isActive) {
+            bar.style.background = "#facc15";
+        } else if (isActive) {
+            bar.style.background = "#38bdf8";
+        }
+    });
+}
+
+function updateAlertRing(alertCount) {
+    const ring = document.getElementById("alert-ring");
+    const summary = document.getElementById("alert-summary");
+
+    const count = Number(alertCount) || 0;
+    const ringPercentage = count === 0 ? 100 : Math.max(15, 100 - count * 18);
+    const degrees = ringPercentage * 3.6;
+
+    if (count === 0) {
+        ring.style.background = `
+            conic-gradient(
+                #22c55e 0deg,
+                #22c55e ${degrees}deg,
+                rgba(255,255,255,0.08) ${degrees}deg
+            )
+        `;
+
+        summary.textContent = "System monitoring normally";
+    } else {
+        ring.style.background = `
+            conic-gradient(
+                #ef4444 0deg,
+                #ef4444 ${degrees}deg,
+                rgba(255,255,255,0.08) ${degrees}deg
+            )
+        `;
+
+        summary.textContent = `${count} alert${count === 1 ? "" : "s"} require attention`;
+    }
+}
+
 function updateDashboard(data) {
+    const averageTemperature = Number(data.kpis.average_temperature) || 0;
+    const maximumTemperature = Number(data.kpis.maximum_temperature) || 0;
+    const vibration = Number(data.kpis.rms_vibration) || 0;
+    const activeAlerts = Number(data.kpis.active_alerts) || 0;
+
     document.getElementById("average-temperature").textContent =
-        `${data.kpis.average_temperature} °C`;
+        averageTemperature.toFixed(1);
 
     document.getElementById("maximum-temperature").textContent =
-        `${data.kpis.maximum_temperature} °C`;
+        maximumTemperature.toFixed(1);
 
     document.getElementById("rms-vibration").textContent =
-        `${data.kpis.rms_vibration} mm/s`;
+        vibration.toFixed(2);
 
     document.getElementById("active-alerts").textContent =
-        data.kpis.active_alerts;
+        activeAlerts;
+
+    updateGauge(
+        "average-temperature-gauge",
+        averageTemperature,
+        100
+    );
+
+    updateGauge(
+        "maximum-temperature-gauge",
+        maximumTemperature,
+        100
+    );
+
+    updateVibrationMeter(vibration);
+    updateAlertRing(activeAlerts);
 
     document.getElementById("system-status").textContent =
         data.system_status.toUpperCase();
@@ -84,7 +209,7 @@ function updateDashboard(data) {
     const currentTime = new Date().toLocaleTimeString();
 
     chartLabels.push(currentTime);
-    vibrationValues.push(data.vibration.rms);
+    vibrationValues.push(vibration);
 
     if (chartLabels.length > 20) {
         chartLabels.shift();
@@ -93,6 +218,7 @@ function updateDashboard(data) {
 
     vibrationChart.update();
 }
+
 
 async function loadDashboardData() {
     try {
