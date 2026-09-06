@@ -1,0 +1,15 @@
+{
+  "name": "iot-dashboard-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "cors": "^2.8.5",
+    "ws": "^8.18.0",
+    "mysql2": "^3.12.0"
+  }
+}

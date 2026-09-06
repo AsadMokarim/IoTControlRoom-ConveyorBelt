@@ -1,0 +1,36 @@
+/* ===== CSS Variables ===== */
+:root {
+    /* Dark mode defaults */
+    --background: #0f172a;
+    --panel: #1e293b;
+    --panel-light: #263449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #334155;
+    --blue: #38bdf8;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+
+    /* Additional styling variables */
+    --bg: #07111f;
+    --panel-border: rgba(148, 163, 184, 0.16);
+    --cyan: #38bdf8;
+}
+
+/* Light Mode Overrides */
+body.light-mode {
+    --background: #f8fafc;
+    --panel: #ffffff;
+    --panel-light: #f1f5f9;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --blue: #0284c7;
+    --green: #16a34a;
+    --yellow: #ca8a04;
+    --red: #dc2626;
+    --bg: #f8fafc;
+    --panel-border: rgba(100, 116, 139, 0.16);
+    --cyan: #0284c7;
+}
