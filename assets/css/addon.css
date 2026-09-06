@@ -1146,3 +1146,34 @@
   gap: 15px;
   margin: 20px 0;
 }
+
+/* ============================================================
+   Digital Twin — Telemetry Text Overlay
+   ============================================================ */
+
+.twin-telemetry-overlay {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 10;
+  background: rgba(10, 14, 23, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  border-radius: 6px;
+  padding: 8px 12px;
+  pointer-events: none;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #cbd5e1;
+}
+
+.twin-telemetry-overlay .telemetry-line {
+  white-space: nowrap;
+}
+
+.twin-telemetry-overlay .telemetry-line span {
+  color: #22c55e;
+  font-weight: 600;
+}

@@ -57,6 +57,11 @@ const CHART_UPDATE_INTERVAL = 500; // ms
 // ============================================================
 
 function init() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('embed') === '3d') {
+    document.body.classList.add('embed-3d-only');
+  }
+
   const canvasContainer = document.getElementById('canvas-container');
 
   // --- Three.js scene ---
@@ -215,7 +220,7 @@ function init() {
     resetCamera();
   });
 
-  let isWhiteBg = false;
+  let isWhiteBg = true;
   document.getElementById('btn-bg-toggle')?.addEventListener('click', () => {
     isWhiteBg = !isWhiteBg;
     const newColor = isWhiteBg ? 0xffffff : 0x000000;

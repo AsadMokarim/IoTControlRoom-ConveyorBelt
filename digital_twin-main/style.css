@@ -892,3 +892,42 @@ body {
     height: 80px;
   }
 }
+
+/* ============================================================
+   EMBED MODE — 3D Only (activated via ?embed=3d query param)
+   Hides all UI chrome; canvas fills entire viewport.
+   ============================================================ */
+
+body.embed-3d-only #app-header,
+body.embed-3d-only #dashboard-panel,
+body.embed-3d-only #app-footer,
+body.embed-3d-only #alert-overlay,
+body.embed-3d-only #loading-screen,
+body.embed-3d-only .sensor-tooltip {
+  display: none !important;
+}
+
+body.embed-3d-only {
+  overflow: hidden;
+}
+
+body.embed-3d-only #app-main {
+  display: block;
+  height: 100vh;
+  width: 100vw;
+}
+
+body.embed-3d-only #canvas-container {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+body.embed-3d-only #canvas-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+}

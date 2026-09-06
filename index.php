@@ -104,13 +104,21 @@
                   <h2>Digital Twin</h2>
                   <span>Live simulation</span>
                 </div>
-                <div class="twin-container" style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden;">
+                <div class="twin-container" style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden; position: relative;">
                   <iframe
                     id="digital-twin-iframe"
-                    src="http://localhost:5173"
+                    src="http://localhost:5173?embed=3d"
                     style="width: 100%; height: 100%; border: none;"
                     title="Conveyor 3D Digital Twin"
                   ></iframe>
+                  <!-- Telemetry text overlay -->
+                  <div id="twin-telemetry-overlay" class="twin-telemetry-overlay">
+                    <div class="telemetry-line">Temp: <span id="twin-val-temp">--</span></div>
+                    <div class="telemetry-line">Vibration: <span id="twin-val-vibration">--</span></div>
+                    <div class="telemetry-line">Load: <span id="twin-val-load">--</span></div>
+                    <div class="telemetry-line">Noise: <span id="twin-val-noise">--</span></div>
+                    <div class="telemetry-line">Current: <span id="twin-val-current">--</span></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -398,5 +406,26 @@
 <script src="assets/js/dashboard.js"></script>
 <script src="assets/js/health-score.js"></script>
 <script src="assets/js/theme.js"></script>
+<script>
+  // Listen for telemetry from the Digital Twin iframe and update overlay
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'DIGITAL_TWIN_TELEMETRY') {
+      var s = event.data.payload.sensorData;
+      var sys = event.data.payload.systemState;
+      if (s) {
+        var tempEl = document.getElementById('twin-val-temp');
+        var vibEl = document.getElementById('twin-val-vibration');
+        var loadEl = document.getElementById('twin-val-load');
+        var noiseEl = document.getElementById('twin-val-noise');
+        var currEl = document.getElementById('twin-val-current');
+        if (tempEl) tempEl.textContent = s.temperature.toFixed(1) + '°C';
+        if (vibEl) vibEl.textContent = s.vibration < 3 ? 'normal' : s.vibration < 5 ? 'elevated' : 'critical';
+        if (loadEl) loadEl.textContent = s.beltSpeed > 0 ? (s.beltSpeed * 100).toFixed(0) + '%' : '0%';
+        if (noiseEl) noiseEl.textContent = s.vibration < 3 ? 'normal' : s.vibration < 5 ? 'moderate' : 'high';
+        if (currEl) currEl.textContent = s.motorCurrent.toFixed(1) + 'A';
+      }
+    }
+  });
+</script>
 </body>
 </html>

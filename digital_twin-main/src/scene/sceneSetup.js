@@ -71,7 +71,7 @@ export function createScene(canvasContainer) {
   // --- Ground Plane ---
   const groundGeo = new THREE.PlaneGeometry(60, 60);
   const groundMat = new THREE.MeshStandardMaterial({
-    color: 0x0d1117,
+    color: 0xf4f4f4,
     roughness: 0.9,
     metalness: 0.1,
   });
@@ -82,7 +82,7 @@ export function createScene(canvasContainer) {
   scene.add(ground);
 
   // Subtle grid overlay
-  const gridHelper = new THREE.GridHelper(60, 60, 0x1a2332, 0x141c28);
+  const gridHelper = new THREE.GridHelper(60, 60, 0xcccccc, 0xdddddd);
   gridHelper.position.y = 0.005;
   scene.add(gridHelper);
 
