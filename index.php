@@ -220,15 +220,20 @@
 
         <section class="dashboard-grid">
 
-
-
             <div class="panel thermal-panel">
                 <div class="panel-header">
-                    <h2>Thermal Map</h2>
+                    <h2>Digital Twin</h2>
                     <span>Live simulation</span>
                 </div>
 
-                <div id="thermal-map" class="thermal-map"></div>
+                <div class="twin-container" style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden;">
+                  <iframe
+                    id="digital-twin-iframe"
+                    src="http://localhost:5173"
+                    style="width: 100%; height: 100%; border: none;"
+                    title="Conveyor 3D Digital Twin"
+                  ></iframe>
+                </div>
             </div>
 
             <div class="panel chart-panel">
@@ -396,6 +401,14 @@
                 </div>
             </div>
 
+            <div class="panel thermal-panel">
+                <div class="panel-header">
+                    <h2>Thermal Map</h2>
+                    <span>Live simulation</span>
+                </div>
+
+                <div id="thermal-map" class="thermal-map"></div>
+            </div>
 
         </section>
     </main>
