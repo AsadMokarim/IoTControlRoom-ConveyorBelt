@@ -39,7 +39,55 @@
             </div>
         </header>
 
+        <div class="widget health-score-widget">
+            <div class="widget-title">
+                <span>Overall Health Score</span>
+                <span class="widget-icon">✦</span>
+            </div>
+
+            <div class="health-score-container">
+                <div class="health-score-ring" id="health-score-ring">
+                    <div class="health-score-inner">
+                        <strong id="health-score">--</strong>
+                        <small>/ 100</small>
+                    </div>
+                </div>
+
+                <div class="health-score-label" id="health-score-label">
+                    Calculating...
+                </div>
+            </div>
+
+            <div class="health-score-formula">
+                <span>Based on</span>
+
+                <div class="health-score-links">
+                    <a href="#average-temperature-gauge">
+                        <span class="formula-icon">🌡</span>
+                        Temperature
+                    </a>
+
+                    <a href="#maximum-temperature-gauge">
+                        <span class="formula-icon">🔥</span>
+                        Max Temp
+                    </a>
+
+                    <a href="#vibration-meter">
+                        <span class="formula-icon">〽</span>
+                        Vibration
+                    </a>
+
+                    <a href="#alert-ring">
+                        <span class="formula-icon">⚠</span>
+                        Alerts
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <section class="widget-grid">
+
+
 
             <div class="widget gauge-widget">
                 <div class="widget-title">
@@ -133,51 +181,7 @@
 
         <section class="dashboard-grid">
 
-            <div class="widget health-score-widget">
-                <div class="widget-title">
-                    <span>Overall Health Score</span>
-                    <span class="widget-icon">✦</span>
-                </div>
 
-                <div class="health-score-container">
-                    <div class="health-score-ring" id="health-score-ring">
-                        <div class="health-score-inner">
-                            <strong id="health-score">--</strong>
-                            <small>/ 100</small>
-                        </div>
-                    </div>
-
-                    <div class="health-score-label" id="health-score-label">
-                        Calculating...
-                    </div>
-                </div>
-
-                <div class="health-score-formula">
-                    <span>Based on</span>
-
-                    <div class="health-score-links">
-                        <a href="#average-temperature-gauge">
-                            <span class="formula-icon">🌡</span>
-                            Temperature
-                        </a>
-
-                        <a href="#maximum-temperature-gauge">
-                            <span class="formula-icon">🔥</span>
-                            Max Temp
-                        </a>
-
-                        <a href="#vibration-meter">
-                            <span class="formula-icon">〽</span>
-                            Vibration
-                        </a>
-
-                        <a href="#alert-ring">
-                            <span class="formula-icon">⚠</span>
-                            Alerts
-                        </a>
-                    </div>
-                </div>
-            </div>
 
             <div class="panel thermal-panel">
                 <div class="panel-header">
