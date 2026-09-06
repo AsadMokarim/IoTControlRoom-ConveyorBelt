@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IoT Control Room</title>
     <link rel="stylesheet" href="assets/css/dashboard.css">
+    <link rel="stylesheet" href="assets/css/addon.css">
 </head>
 <body>
 
@@ -39,50 +40,89 @@
             </div>
         </header>
 
-        <div class="widget health-score-widget">
-            <div class="widget-title">
-                <span>Overall Health Score</span>
+        <div class="widget health-score-widget" aria-labelledby="health-score-title">
+            <div class="health-score-header">
+                <div>
+                    <div class="health-score-eyebrow">
+                        <span class="health-status-dot" aria-hidden="true"></span>
+                        SYSTEM HEALTH
+                    </div>
+
+                    <h2 id="health-score-title">Overall Health Score</h2>
+                </div>
+
+                <div class="health-score-live">
+                    <span class="health-live-pulse"></span>
+                    Live
+                </div>
             </div>
 
-            <div class="health-score-container">
-                <div class="health-score-ring" id="health-score-ring">
+            <div class="health-score-main">
+                <div
+                    class="health-score-ring"
+                    id="health-score-ring"
+                    role="progressbar"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="0"
+                    aria-label="Overall health score"
+                >
+                    <div class="health-score-ring-glow"></div>
+
                     <div class="health-score-inner">
                         <strong id="health-score">--</strong>
-                        <small>/ 100</small>
+                        <small>/100</small>
                     </div>
                 </div>
 
-                <div class="health-score-label" id="health-score-label">
-                    Calculating...
+                <div class="health-score-summary">
+                    <div class="health-score-label" id="health-score-label">
+                        Calculating...
+                    </div>
+
+                    <p class="health-score-description" id="health-score-description">
+                        Analyzing current machine telemetry
+                    </p>
                 </div>
             </div>
 
-            <div class="health-score-formula">
-                <span>Based on</span>
+            <div class="health-score-divider"></div>
 
-                <div class="health-score-links">
-                    <a href="#average-temperature-gauge">
-                        <span class="formula-icon">🌡</span>
-                        Temperature
-                    </a>
+            <div class="health-score-footer">
+                <div class="health-score-based-on">
+                    <span>Score based on</span>
 
-                    <a href="#maximum-temperature-gauge">
-                        <span class="formula-icon">🔥</span>
-                        Max Temp
-                    </a>
+                    <div class="health-score-links">
+                        <a href="#average-temperature-gauge" title="Average temperature">
+                            <span class="formula-icon">🌡</span>
+                            <span>Temperature</span>
+                        </a>
 
-                    <a href="#vibration-meter">
-                        <span class="formula-icon">〽</span>
-                        Vibration
-                    </a>
+                        <a href="#maximum-temperature-gauge" title="Maximum temperature">
+                            <span class="formula-icon">🔥</span>
+                            <span>Max temp</span>
+                        </a>
 
-                    <a href="#alert-ring">
-                        <span class="formula-icon">⚠</span>
-                        Alerts
-                    </a>
+                        <a href="#vibration-meter" title="Vibration">
+                            <span class="formula-icon">〽</span>
+                            <span>Vibration</span>
+                        </a>
+
+                        <a href="#alert-ring" title="Active alerts">
+                            <span class="formula-icon">⚠</span>
+                            <span>Alerts</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="health-score-scale" aria-hidden="true">
+                    <span>Critical</span>
+                    <span>Good</span>
+                    <span>Excellent</span>
                 </div>
             </div>
         </div>
+
 
         <section class="widget-grid">
 
