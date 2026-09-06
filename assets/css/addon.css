@@ -1116,3 +1116,33 @@
         animation: none;
     }
 }
+
+/* The Parent Container */
+.health-layout {
+  display: flex;
+  gap: 20px; /* Space between the two columns */
+  align-items: flex-start; /* Aligns tops of columns */
+  flex-wrap: wrap; /* Allows stacking on small screens */
+}
+
+/* Column 1: Health Score */
+.health-column {
+  flex: 1; /* Takes up available space */
+  min-width: 250px; /* Minimum width before wrapping */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Column 2: Digital Twin */
+.twin-column {
+  flex: 1; /* Takes up available space */
+  min-width: 350px; /* Minimum width before wrapping */
+}
+
+/* Existing styles (ensure these are present) */
+.health-score-main {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 20px 0;
+}

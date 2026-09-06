@@ -41,86 +41,81 @@
         </header>
 
         <div class="widget health-score-widget" aria-labelledby="health-score-title">
-            <div class="health-score-header">
-                <div>
-                    <div class="health-score-eyebrow">
-                        <span class="health-status-dot" aria-hidden="true"></span>
-                        SYSTEM HEALTH
-                    </div>
+          <!-- FLEX CONTAINER -->
+          <div class="health-layout">
 
-                    <h2 id="health-score-title">Overall Health Score</h2>
-                </div>
+            <!-- COLUMN 1: Health Metrics -->
+            <div class="health-column">
+              <div class="health-score-eyebrow">
+                <span class="health-status-dot" aria-hidden="true"></span>
+                SYSTEM HEALTH
+              </div>
+              <h2 id="health-score-title">Overall Health Score</h2>
 
-                <div class="health-score-live">
-                    <span class="health-live-pulse"></span>
-                    Live
-                </div>
-            </div>
-
-            <div class="health-score-main">
-                <div
-                    class="health-score-ring"
-                    id="health-score-ring"
-                    role="progressbar"
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                    aria-valuenow="0"
-                    aria-label="Overall health score"
-                >
-                    <div class="health-score-ring-glow"></div>
-
-                    <div class="health-score-inner">
-                        <strong id="health-score">--</strong>
-                        <small>/100</small>
-                    </div>
+              <div class="health-score-main">
+                <div class="health-score-ring" id="health-score-ring" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Overall health score">
+                  <div class="health-score-ring-glow"></div>
+                  <div class="health-score-inner">
+                    <strong id="health-score">--</strong>
+                    <small>/100</small>
+                  </div>
                 </div>
 
                 <div class="health-score-summary">
-                    <div class="health-score-label" id="health-score-label">
-                        Calculating...
-                    </div>
-
-                    <p class="health-score-description" id="health-score-description">
-                        Analyzing current machine telemetry
-                    </p>
+                  <div class="health-score-label" id="health-score-label">Calculating...</div>
+                  <p class="health-score-description" id="health-score-description">
+                    Analyzing current machine telemetry
+                  </p>
                 </div>
-            </div>
+              </div>
 
-            <div class="health-score-divider"></div>
+              <div class="health-score-divider"></div>
 
-            <div class="health-score-footer">
+              <div class="health-score-footer">
                 <div class="health-score-based-on">
-                    <span>Score based on</span>
-
-                    <div class="health-score-links">
-                        <a href="#average-temperature-gauge" title="Average temperature">
-                            <span class="formula-icon">🌡</span>
-                            <span>Temperature</span>
-                        </a>
-
-                        <a href="#maximum-temperature-gauge" title="Maximum temperature">
-                            <span class="formula-icon">🔥</span>
-                            <span>Max temp</span>
-                        </a>
-
-                        <a href="#vibration-meter" title="Vibration">
-                            <span class="formula-icon">〽</span>
-                            <span>Vibration</span>
-                        </a>
-
-                        <a href="#alert-ring" title="Active alerts">
-                            <span class="formula-icon">⚠</span>
-                            <span>Alerts</span>
-                        </a>
-                    </div>
+                  <span>Score based on</span>
+                  <div class="health-score-links">
+                    <a href="#average-temperature-gauge" title="Average temperature">
+                      <span class="formula-icon">🌡</span><span>Temperature</span>
+                    </a>
+                    <a href="#maximum-temperature-gauge" title="Maximum temperature">
+                      <span class="formula-icon">🔥</span><span>Max temp</span>
+                    </a>
+                    <a href="#vibration-meter" title="Vibration">
+                      <span class="formula-icon">〽</span><span>Vibration</span>
+                    </a>
+                    <a href="#alert-ring" title="Active alerts">
+                      <span class="formula-icon">⚠</span><span>Alerts</span>
+                    </a>
+                  </div>
                 </div>
-
                 <div class="health-score-scale" aria-hidden="true">
-                    <span>Critical</span>
-                    <span>Good</span>
-                    <span>Excellent</span>
+                  <span>Critical</span>
+                  <span>Good</span>
+                  <span>Excellent</span>
                 </div>
+              </div>
             </div>
+
+            <!-- COLUMN 2: Digital Twin Preview -->
+            <div class="twin-column">
+              <div class="panel thermal-panel">
+                <div class="panel-header">
+                  <h2>Digital Twin</h2>
+                  <span>Live simulation</span>
+                </div>
+                <div class="twin-container" style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden;">
+                  <iframe
+                    id="digital-twin-iframe"
+                    src="http://localhost:5173"
+                    style="width: 100%; height: 100%; border: none;"
+                    title="Conveyor 3D Digital Twin"
+                  ></iframe>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
 
 
@@ -219,22 +214,6 @@
 
 
         <section class="dashboard-grid">
-
-            <div class="panel thermal-panel">
-                <div class="panel-header">
-                    <h2>Digital Twin</h2>
-                    <span>Live simulation</span>
-                </div>
-
-                <div class="twin-container" style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden;">
-                  <iframe
-                    id="digital-twin-iframe"
-                    src="http://localhost:5173"
-                    style="width: 100%; height: 100%; border: none;"
-                    title="Conveyor 3D Digital Twin"
-                  ></iframe>
-                </div>
-            </div>
 
             <div class="panel chart-panel">
                 <div class="panel-header">
