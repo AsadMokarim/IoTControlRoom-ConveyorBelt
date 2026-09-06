@@ -42,7 +42,6 @@
         <div class="widget health-score-widget">
             <div class="widget-title">
                 <span>Overall Health Score</span>
-                <span class="widget-icon">✦</span>
             </div>
 
             <div class="health-score-container">
