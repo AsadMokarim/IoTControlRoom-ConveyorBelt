@@ -61,6 +61,7 @@ export function createJoints() {
 function createSingleJoint(index, xPos) {
   const group = new THREE.Group();
   group.name = `Joint_${String(index).padStart(2, '0')}`;
+  group.position.set(xPos, 0, 0);
 
   const id = `joint_${index}`;
   const beltY = DIMENSIONS.beltY;
@@ -76,7 +77,7 @@ function createSingleJoint(index, xPos) {
   });
   const ring = new THREE.Mesh(ringGeo, ringMat);
   ring.rotation.x = -Math.PI / 2;
-  ring.position.set(xPos, beltY + 0.02, 0);
+  ring.position.set(0, beltY + 0.02, 0);
   ring.castShadow = true;
   // Tag for raycasting identification
   ring.userData = { type: 'joint', jointId: id, jointIndex: index };
@@ -92,7 +93,7 @@ function createSingleJoint(index, xPos) {
     metalness: 0.3,
   });
   const indicator = new THREE.Mesh(indicatorGeo, indicatorMat);
-  indicator.position.set(xPos, beltY + 0.7, 0);
+  indicator.position.set(0, beltY + 0.7, 0);
   indicator.userData = { type: 'joint', jointId: id, jointIndex: index };
   group.add(indicator);
 
@@ -104,7 +105,7 @@ function createSingleJoint(index, xPos) {
     opacity: 0.4,
   });
   const line = new THREE.Mesh(lineGeo, lineMat);
-  line.position.set(xPos, beltY + 0.38, 0);
+  line.position.set(0, beltY + 0.38, 0);
   group.add(line);
 
   // --- Joint data object ---

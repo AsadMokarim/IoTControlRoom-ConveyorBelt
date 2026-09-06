@@ -64,6 +64,8 @@ function init() {
   scene = sceneResult.scene;
   camera = sceneResult.camera;
   renderer = sceneResult.renderer;
+  let ground = sceneResult.ground;
+  let gridHelper = sceneResult.gridHelper;
 
   // --- Camera controls ---
   const camResult = setupCameraControls(camera, renderer.domElement);
@@ -213,6 +215,35 @@ function init() {
     resetCamera();
   });
 
+  let isWhiteBg = false;
+  document.getElementById('btn-bg-toggle')?.addEventListener('click', () => {
+    isWhiteBg = !isWhiteBg;
+    const newColor = isWhiteBg ? 0xffffff : 0x000000;
+    scene.background.setHex(newColor);
+    if (scene.fog) {
+      scene.fog.color.setHex(newColor);
+    }
+    
+    // Update ground
+    if (ground && ground.material) {
+      ground.material.color.setHex(isWhiteBg ? 0xf4f4f4 : 0x0d1117);
+    }
+    
+    // Update grid helper by replacing it
+    if (gridHelper) {
+      scene.remove(gridHelper);
+      gridHelper.geometry.dispose();
+      gridHelper.material.dispose();
+    }
+    gridHelper = new THREE.GridHelper(
+      60, 60, 
+      isWhiteBg ? 0xcccccc : 0x1a2332, 
+      isWhiteBg ? 0xdddddd : 0x141c28
+    );
+    gridHelper.position.y = 0.005;
+    scene.add(gridHelper);
+  });
+
   // --- Clock ---
   clock = new THREE.Clock();
 
@@ -247,6 +278,18 @@ function animate() {
   // --- Belt animation (texture scroll) ---
   if (motorState.running && beltTexture) {
     beltTexture.offset.x -= delta * 1.0;
+    
+    // Move the joints along with the belt
+    // The belt top is 9.4 units long, and texture repeats 8 times (9.4 / 8 = 1.175 units/sec)
+    const beltSpeed = 1.175;
+    for (const j of joints) {
+      j.group.position.x += beltSpeed * delta;
+      
+      // Loop around at the ends (endRollerX is 4.7)
+      if (j.group.position.x > 4.7) {
+        j.group.position.x -= 9.4;
+      }
+    }
   }
 
   // --- Roller rotation ---

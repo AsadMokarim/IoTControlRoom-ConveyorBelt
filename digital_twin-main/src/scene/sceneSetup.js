@@ -96,5 +96,5 @@ export function createScene(canvasContainer) {
   }
   window.addEventListener('resize', onResize);
 
-  return { scene, camera, renderer, onResize };
+  return { scene, camera, renderer, onResize, ground, gridHelper };
 }

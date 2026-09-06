@@ -45,11 +45,11 @@ function createMaterials() {
   beltCanvas.width = 512;
   beltCanvas.height = 64;
   const ctx = beltCanvas.getContext('2d');
-  
+
   // Base rubber color
   ctx.fillStyle = '#1a1a1a';
   ctx.fillRect(0, 0, 512, 64);
-  
+
   // High-contrast thick tread lines
   ctx.strokeStyle = '#333333';
   ctx.lineWidth = 4;
@@ -59,7 +59,7 @@ function createMaterials() {
     ctx.lineTo(i, 64);
     ctx.stroke();
   }
-  
+
   // Yellow industrial edge markers for highly visible movement
   ctx.fillStyle = '#f59e0b';
   for (let i = 0; i < 512; i += 64) {
@@ -108,7 +108,7 @@ export function createConveyor() {
   // SIDE RAILS (2x long horizontal beams)
   // =====================
   const railGeo = new THREE.BoxGeometry(CONVEYOR_LENGTH, RAIL_THICKNESS, RAIL_THICKNESS);
-  
+
   const leftRail = new THREE.Mesh(railGeo, materials.steel);
   leftRail.position.set(0, CONVEYOR_HEIGHT, halfWidth);
   leftRail.castShadow = true;
@@ -268,17 +268,17 @@ export function createConveyor() {
   beltMesh.add(leftCurve);
 
   // Side caps for right curve
-  const rightRingGeo = new THREE.RingGeometry(endRollerRadius, endCurveRadius, 32, 1, -Math.PI/2, Math.PI);
+  const rightRingGeo = new THREE.RingGeometry(endRollerRadius, endCurveRadius, 32, 1, -Math.PI / 2, Math.PI);
   const rightCap1 = new THREE.Mesh(rightRingGeo, materials.belt);
   rightCap1.position.set(endRollerX, endRollerY, beltWidth / 2);
   beltMesh.add(rightCap1);
   const rightCap2 = new THREE.Mesh(rightRingGeo, materials.belt);
   rightCap2.position.set(endRollerX, endRollerY, -beltWidth / 2);
-  rightCap2.rotation.x = Math.PI; 
+  rightCap2.rotation.x = Math.PI;
   beltMesh.add(rightCap2);
 
   // Side caps for left curve
-  const leftRingGeo = new THREE.RingGeometry(endRollerRadius, endCurveRadius, 32, 1, Math.PI/2, Math.PI);
+  const leftRingGeo = new THREE.RingGeometry(endRollerRadius, endCurveRadius, 32, 1, Math.PI / 2, Math.PI);
   const leftCap1 = new THREE.Mesh(leftRingGeo, materials.belt);
   leftCap1.position.set(-endRollerX, endRollerY, beltWidth / 2);
   beltMesh.add(leftCap1);

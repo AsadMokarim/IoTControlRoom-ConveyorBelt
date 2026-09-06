@@ -4,7 +4,9 @@
    ============================================================ */
 
 /* --- Reset & Base --- */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -43,7 +45,8 @@
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   overflow: hidden;
   background: var(--bg-primary);
@@ -141,8 +144,15 @@ body {
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* --- Main --- */
@@ -232,9 +242,11 @@ body {
 #dashboard-panel::-webkit-scrollbar {
   width: 4px;
 }
+
 #dashboard-panel::-webkit-scrollbar-track {
   background: transparent;
 }
+
 #dashboard-panel::-webkit-scrollbar-thumb {
   background: var(--text-dim);
   border-radius: 2px;
@@ -279,6 +291,7 @@ body {
   background: var(--green-dim);
   color: var(--green);
 }
+
 .health-badge.status-normal .health-dot {
   background: var(--green);
   box-shadow: 0 0 6px var(--green);
@@ -288,6 +301,7 @@ body {
   background: var(--amber-dim);
   color: var(--amber);
 }
+
 .health-badge.status-warning .health-dot {
   background: var(--amber);
   box-shadow: 0 0 6px var(--amber);
@@ -297,6 +311,7 @@ body {
   background: var(--red-dim);
   color: var(--red);
 }
+
 .health-badge.status-critical .health-dot {
   background: var(--red);
   box-shadow: 0 0 6px var(--red);
@@ -402,10 +417,12 @@ body {
   background: var(--green);
   box-shadow: 0 0 4px var(--green);
 }
+
 .joint-dot.status-warning {
   background: var(--amber);
   box-shadow: 0 0 4px var(--amber);
 }
+
 .joint-dot.status-critical {
   background: var(--red);
   box-shadow: 0 0 6px var(--red);
@@ -471,10 +488,12 @@ body {
   color: var(--green);
   background: var(--green-dim);
 }
+
 .detail-state.status-warning {
   color: var(--amber);
   background: var(--amber-dim);
 }
+
 .detail-state.status-critical {
   color: var(--red);
   background: var(--red-dim);
@@ -494,11 +513,13 @@ body {
   border-radius: 50%;
   transition: background 0.3s;
 }
+
 .sync-dot.synced {
   background: var(--green);
   box-shadow: 0 0 6px var(--green);
   animation: pulse-dot 2s ease-in-out infinite;
 }
+
 .sync-dot.disconnected {
   background: var(--red);
 }
@@ -521,6 +542,7 @@ body {
   font-size: 10px;
   color: var(--text-dim);
 }
+
 .twin-meta-value {
   font-size: 10px;
   color: var(--text-secondary);
@@ -560,8 +582,13 @@ body {
   transition: color 0.3s;
 }
 
-.twin-state-value.twin-running { color: var(--green); }
-.twin-state-value.twin-stopped { color: var(--red); }
+.twin-state-value.twin-running {
+  color: var(--green);
+}
+
+.twin-state-value.twin-stopped {
+  color: var(--red);
+}
 
 .twin-state-arrow {
   font-size: 16px;
@@ -631,6 +658,7 @@ body {
   color: var(--red);
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
+
 .btn-danger:hover {
   background: rgba(239, 68, 68, 0.25);
 }
@@ -640,6 +668,7 @@ body {
   color: var(--text-secondary);
   border: 1px solid var(--border);
 }
+
 .btn-secondary:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
@@ -650,6 +679,7 @@ body {
   color: var(--text-muted);
   border: 1px solid var(--border-light);
 }
+
 .btn-ghost:hover {
   background: var(--bg-section);
   color: var(--text-secondary);
@@ -690,8 +720,15 @@ body {
 }
 
 @keyframes alert-in {
-  from { transform: scale(0.92); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .alert-icon {
@@ -803,7 +840,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-text {
@@ -821,13 +860,13 @@ body {
   #app-main {
     flex-direction: column;
   }
-  
+
   #canvas-container {
     min-height: 300px;
     flex: none;
     height: 45vh;
   }
-  
+
   #dashboard-panel {
     width: 100%;
     border-left: none;
@@ -837,7 +876,7 @@ body {
     overflow-y: visible;
     overflow-x: auto;
   }
-  
+
   .panel-section {
     min-width: 200px;
     flex: 1;
@@ -848,7 +887,7 @@ body {
   .charts-row {
     flex-direction: column;
   }
-  
+
   .chart-container {
     height: 80px;
   }
