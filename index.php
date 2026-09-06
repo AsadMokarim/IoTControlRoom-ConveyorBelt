@@ -133,6 +133,52 @@
 
         <section class="dashboard-grid">
 
+            <div class="widget health-score-widget">
+                <div class="widget-title">
+                    <span>Overall Health Score</span>
+                    <span class="widget-icon">✦</span>
+                </div>
+
+                <div class="health-score-container">
+                    <div class="health-score-ring" id="health-score-ring">
+                        <div class="health-score-inner">
+                            <strong id="health-score">--</strong>
+                            <small>/ 100</small>
+                        </div>
+                    </div>
+
+                    <div class="health-score-label" id="health-score-label">
+                        Calculating...
+                    </div>
+                </div>
+
+                <div class="health-score-formula">
+                    <span>Based on</span>
+
+                    <div class="health-score-links">
+                        <a href="#average-temperature-gauge">
+                            <span class="formula-icon">🌡</span>
+                            Temperature
+                        </a>
+
+                        <a href="#maximum-temperature-gauge">
+                            <span class="formula-icon">🔥</span>
+                            Max Temp
+                        </a>
+
+                        <a href="#vibration-meter">
+                            <span class="formula-icon">〽</span>
+                            Vibration
+                        </a>
+
+                        <a href="#alert-ring">
+                            <span class="formula-icon">⚠</span>
+                            Alerts
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div class="panel thermal-panel">
                 <div class="panel-header">
                     <h2>Thermal Map</h2>
@@ -160,23 +206,153 @@
                     <span id="twin-status">Healthy</span>
                 </div>
 
-                <div class="digital-twin">
-                    <div class="machine-component normal">Motor 1</div>
-                    <div class="machine-component warning">Bearing 1</div>
-                    <div class="machine-component normal">Pump 1</div>
-                    <div class="machine-component offline">Fan 1</div>
+                <div class="digital-twin-table-wrapper">
+                    <table class="digital-twin-table">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Condition</th>
+                                <th>Temperature</th>
+                                <th>Vibration</th>
+                                <th>Last Check</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="component-name">
+                                        <span class="component-dot normal"></span>
+                                        Motor 1
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="condition-badge normal">Normal</span>
+                                </td>
+                                <td>42.6 °C</td>
+                                <td>1.8 mm/s</td>
+                                <td>Just now</td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="component-name">
+                                        <span class="component-dot warning"></span>
+                                        Bearing 1
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="condition-badge warning">Warning</span>
+                                </td>
+                                <td>68.4 °C</td>
+                                <td>4.9 mm/s</td>
+                                <td>Just now</td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="component-name">
+                                        <span class="component-dot normal"></span>
+                                        Pump 1
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="condition-badge normal">Normal</span>
+                                </td>
+                                <td>39.8 °C</td>
+                                <td>1.2 mm/s</td>
+                                <td>2 min ago</td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="component-name">
+                                        <span class="component-dot offline"></span>
+                                        Fan 1
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="condition-badge offline">Offline</span>
+                                </td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>18 min ago</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+
             </div>
 
-            <div class="panel">
+            <div class="panel degradation-panel">
                 <div class="panel-header">
-                    <h2>Recent Alerts</h2>
+                    <div>
+                        <h2>Degradation Progression</h2>
+                        <span class="panel-subtitle">Splice condition stages</span>
+                    </div>
+
+                    <span class="stage-status">STAGE 0</span>
                 </div>
 
-                <div id="alerts-list">
-                    No alerts
+                <div class="degradation-timeline">
+
+                    <div class="degradation-stage active">
+                        <div class="stage-marker">
+                            <span>0</span>
+                        </div>
+
+                        <div class="stage-content">
+                            <span class="stage-label">Stage 0</span>
+                            <strong>Healthy splice</strong>
+                            <p>Normal operating condition with no detected degradation.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-connector"></div>
+
+                    <div class="degradation-stage">
+                        <div class="stage-marker">
+                            <span>1</span>
+                        </div>
+
+                        <div class="stage-content">
+                            <span class="stage-label">Stage 1</span>
+                            <strong>Minor artificial defect</strong>
+                            <p>Early defect signature detected during monitoring.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-connector"></div>
+
+                    <div class="degradation-stage">
+                        <div class="stage-marker">
+                            <span>2</span>
+                        </div>
+
+                        <div class="stage-content">
+                            <span class="stage-label">Stage 2</span>
+                            <strong>Partial splice weakening</strong>
+                            <p>Structural performance is beginning to deteriorate.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-connector"></div>
+
+                    <div class="degradation-stage">
+                        <div class="stage-marker">
+                            <span>3</span>
+                        </div>
+
+                        <div class="stage-content">
+                            <span class="stage-label">Stage 3</span>
+                            <strong>Severe degradation</strong>
+                            <p>Critical condition requiring immediate inspection.</p>
+                        </div>
+                    </div>
+
                 </div>
             </div>
+
 
         </section>
     </main>
@@ -185,6 +361,7 @@
 
 <script src="assets/vendor/chart.js"></script>
 <script src="assets/js/dashboard.js"></script>
+<script src="assets/js/health-score.js"></script>
 <script src="assets/js/theme.js"></script>
 </body>
 </html>
