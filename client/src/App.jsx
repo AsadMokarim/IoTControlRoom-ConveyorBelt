@@ -6,6 +6,7 @@ import AlertRing from './components/dashboard/AlertRing'
 import VibrationChart from './components/dashboard/VibrationChart'
 import DigitalTwinStatus from './components/dashboard/DigitalTwinStatus'
 import DegradationTimeline from './components/dashboard/DegradationTimeline'
+import ConveyorControl from './components/dashboard/ConveyorControl'
 import ThermalMap from './components/dashboard/ThermalMap'
 import DigitalTwinCanvas from './components/digital-twin/DigitalTwinCanvas'
 import DigitalTwinPage from './components/digital-twin/DigitalTwinPage'
@@ -147,11 +148,14 @@ function App() {
       <main className="main-content">
         <header className="topbar">
           <div>
-            <h1>System Overview</h1>
+            <h1>System Overviews</h1>
             <p id="last-updated">{data ? `Last updated: ${timestamp}` : timestamp}</p>
           </div>
-          <div id="system-status" className={`status-badge ${systemStatus}`}>
-            {systemStatus.toUpperCase()}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <ConveyorControl />
+            <div id="system-status" className={`status-badge ${systemStatus}`}>
+              {systemStatus.toUpperCase()}
+            </div>
           </div>
         </header>
 

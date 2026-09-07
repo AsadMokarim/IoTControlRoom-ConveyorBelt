@@ -1,8 +1,11 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import dashboardRoutes from './routes/dashboard.js';
+import conveyorRoutes from './routes/conveyor.js';
+import { connectMqtt } from './services/mqttClient.js';
 import { generateMockTelemetry } from './services/mockDataGenerator.js';
 
 const PORT = process.env.PORT || 3001;
@@ -13,6 +16,7 @@ app.use(express.json());
 
 // Mount API routes
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/conveyor', conveyorRoutes);
 
 const server = createServer(app);
 
@@ -37,6 +41,8 @@ wss.on('connection', (ws) => {
         clearInterval(interval);
     });
 });
+
+connectMqtt();
 
 server.listen(PORT, () => {
     console.log(`Server started on http://localhost:${PORT}`);
