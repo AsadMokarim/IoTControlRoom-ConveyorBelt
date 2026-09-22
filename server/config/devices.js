@@ -6,9 +6,12 @@
 
 export const DEVICES = {
   MQTT: {
-    BROKER_URL: process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883',
+    BROKER_URL: process.env.MQTT_BROKER_URL || 'mqtt://127.0.0.1:1883',
+    FALLBACK_URL: process.env.MQTT_FALLBACK_URL || 'mqtt://10.42.0.1:1883',
     TOPICS: {
-      TELEMETRY: 'conveyor/sensors/telemetry',
+      TELEMETRY: 'conveyor/sensors',
+      TELEMETRY_LEGACY: 'conveyor/sensors/telemetry',
+      ALL_CONVEYOR: 'conveyor/#',
       CONTROL_RELAY: 'conveyor/control/relay',
       ALERTS_TRIP: 'conveyor/alerts/trip',
       STATUS_ESP32: 'conveyor/status/esp32',

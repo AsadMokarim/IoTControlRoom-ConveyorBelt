@@ -16,61 +16,99 @@ class MqttService {
   }
 
   init() {
-    const brokerUrl = DEVICES.MQTT.BROKER_URL;
-    console.log(`[MQTT] Connecting to broker at ${brokerUrl}...`);
+    const candidates = [
+      process.env.MQTT_BROKER_URL,
+      DEVICES.MQTT.BROKER_URL,
+      DEVICES.MQTT.FALLBACK_URL,
+      'mqtt://127.0.0.1:1883',
+      'mqtt://10.42.0.1:1883',
+      'mqtt://localhost:1883',
+    ].filter(Boolean);
+    const brokerUrls = [...new Set(candidates)];
+    let currentIdx = 0;
 
-    try {
-      this.client = mqtt.connect(brokerUrl, {
-        reconnectPeriod: 3000,
-        connectTimeout: 5000,
-        clientId: `iot_dashboard_server_${Math.random().toString(16).slice(2, 8)}`,
-        clean: true,
-      });
+    const connectToBroker = (url) => {
+      console.log(`[MQTT] Attempting connection to broker at ${url}...`);
 
-      this.client.on('connect', () => {
-        this.isConnected = true;
-        console.log(`[MQTT] Successfully connected to broker: ${brokerUrl}`);
+      try {
+        if (this.client) {
+          try { this.client.end(true); } catch (_) {}
+        }
 
-        const topics = [
-          DEVICES.MQTT.TOPICS.TELEMETRY,
-          DEVICES.MQTT.TOPICS.ALERTS_TRIP,
-          DEVICES.MQTT.TOPICS.STATUS_ESP32,
-        ];
+        this.client = mqtt.connect(url, {
+          reconnectPeriod: 3000,
+          connectTimeout: 4000,
+          clientId: `iot_dashboard_server_${Math.random().toString(16).slice(2, 8)}`,
+          clean: true,
+        });
 
-        this.client.subscribe(topics, (err) => {
-          if (err) {
-            console.error('[MQTT] Subscription error:', err);
-          } else {
-            console.log(`[MQTT] Subscribed to topics: ${topics.join(', ')}`);
+        let connectionEstablished = false;
+
+        this.client.on('connect', () => {
+          this.isConnected = true;
+          connectionEstablished = true;
+          console.log(`[MQTT] Successfully connected to broker: ${url}`);
+
+          // Subscribe to wildcard conveyor/# plus specific telemetry topics
+          const topics = [
+            'conveyor/#',
+            DEVICES.MQTT.TOPICS.TELEMETRY,
+            DEVICES.MQTT.TOPICS.TELEMETRY_LEGACY,
+            DEVICES.MQTT.TOPICS.ALERTS_TRIP,
+            DEVICES.MQTT.TOPICS.STATUS_ESP32,
+          ];
+
+          this.client.subscribe(topics, (err) => {
+            if (err) {
+              console.error('[MQTT] Subscription error:', err);
+            } else {
+              console.log(`[MQTT] Subscribed to topics: ${topics.join(', ')}`);
+            }
+          });
+        });
+
+        this.client.on('message', (topic, message) => {
+          this.handleMessage(topic, message.toString());
+        });
+
+        this.client.on('offline', () => {
+          this.isConnected = false;
+          console.warn('[MQTT] Broker connection went offline. Reconnecting in background...');
+        });
+
+        this.client.on('error', (err) => {
+          this.isConnected = false;
+          console.warn(`[MQTT] Broker warning (${url}): ${err.message}`);
+
+          // If never successfully connected to this URL, try the next candidate broker
+          if (!connectionEstablished && currentIdx < brokerUrls.length - 1) {
+            currentIdx++;
+            const nextUrl = brokerUrls[currentIdx];
+            console.log(`[MQTT] Trying next candidate broker URL: ${nextUrl}`);
+            connectToBroker(nextUrl);
           }
         });
-      });
+      } catch (error) {
+        console.error('[MQTT] Initialization error:', error.message);
+      }
+    };
 
-      this.client.on('message', (topic, message) => {
-        this.handleMessage(topic, message.toString());
-      });
-
-      this.client.on('offline', () => {
-        this.isConnected = false;
-        console.warn('[MQTT] Broker connection went offline. Reconnecting in background...');
-      });
-
-      this.client.on('error', (err) => {
-        this.isConnected = false;
-        // Don't crash server if broker is temporarily down during local dev
-        console.warn(`[MQTT] Broker warning: ${err.message}`);
-      });
-    } catch (error) {
-      console.error('[MQTT] Initialization error:', error.message);
-    }
+    connectToBroker(brokerUrls[0]);
   }
 
   handleMessage(topic, rawPayload) {
     try {
-      if (topic === DEVICES.MQTT.TOPICS.TELEMETRY) {
+      // Ingest sensor telemetry from conveyor/sensors, conveyor/sensors/telemetry, or any conveyor/sensors/*
+      if (
+        topic === 'conveyor/sensors' ||
+        topic === 'conveyor/sensors/telemetry' ||
+        topic.startsWith('conveyor/sensors') ||
+        topic === 'conveyor'
+      ) {
         const data = JSON.parse(rawPayload);
+        console.log(`[MQTT INGEST] [${topic}] temp=${data.temp ?? data.temperature ?? '--'} current=${data.current ?? data.motor_current ?? '--'} shock=${data.shock ?? data.vibration ?? '--'}`);
         telemetryStore.updateFromDevice(data);
-      } else if (topic === DEVICES.MQTT.TOPICS.ALERTS_TRIP) {
+      } else if (topic.includes('alerts') || topic.includes('trip')) {
         const tripData = JSON.parse(rawPayload);
         console.warn('[MQTT ALERT] Hardware trip received:', tripData);
         telemetryStore.setRelayState({
@@ -78,10 +116,10 @@ class MqttService {
           trip_triggered: true,
           trip_reason: tripData.reason || 'HARDWARE_AUTOCUTOFF',
         });
-      } else if (topic === DEVICES.MQTT.TOPICS.STATUS_ESP32) {
+      } else if (topic.includes('status')) {
         const status = rawPayload.trim();
-        this.esp32Online = status === 'online';
-        console.log(`[MQTT] ESP32 device status changed to: ${status}`);
+        this.esp32Online = status.toLowerCase() === 'online' || status.toLowerCase() === 'ok';
+        console.log(`[MQTT] ESP32 device status: ${status}`);
       }
     } catch (e) {
       console.error(`[MQTT] Failed to parse message on ${topic}:`, e.message);

@@ -7,7 +7,7 @@
 
 import { generateMockTelemetry, randomFloat, randomInt } from './mockDataGenerator.js';
 
-const LIVE_TIMEOUT_MS = 5000;
+const LIVE_TIMEOUT_MS = 10000;
 
 class TelemetryStore {
   constructor() {
@@ -32,9 +32,46 @@ class TelemetryStore {
     const s = payload.sensors || {};
     const relay = payload.relay || {};
 
+    // Extract raw fields supporting both flat and nested schemas:
+    // Flat: {"temp":32.81, "current":2.90, "shock":1.00, "noise":0, "status":"OK"}
+    // Nested: { sensors: { temperature: 32.81, ... }, relay: { ... } }
+    const rawTemp = payload.temp ?? payload.temperature ?? s.temperature ?? s.temp;
+    const rawCurrent = payload.current ?? payload.motor_current ?? s.motor_current ?? s.current;
+    const rawShock = payload.shock ?? payload.vibration ?? payload.vibration_rms ?? s.vibration_rms ?? s.shock;
+    const rawNoise = payload.noise ?? payload.acoustic_db ?? s.acoustic_db ?? s.noise;
+    const rawStatus = payload.status ?? relay.state ?? payload.system_status;
+
+    const temp = rawTemp !== undefined ? Number(Number(rawTemp).toFixed(1)) : 45.0;
+    // Current: use magnitude if sensor has DC drift
+    const current = rawCurrent !== undefined ? Number(Math.abs(Number(rawCurrent)).toFixed(2)) : 1.35;
+    const vibRms = rawShock !== undefined ? Number(Number(rawShock).toFixed(2)) : 2.1;
+
+    // For noise / acoustic:
+    // If digital sensor (0 or 1), 0 = normal ambient sound (~54 dB), 1 = spike (>86 dB)
+    let acoustic = 68.0;
+    if (rawNoise !== undefined) {
+      const n = Number(rawNoise);
+      if (n === 0) {
+        acoustic = 54.2;
+      } else if (n === 1) {
+        acoustic = 86.8;
+      } else {
+        acoustic = Number(n.toFixed(1));
+      }
+    }
+
+    // Check status or cutoff from ESP32
+    const statusUpper = String(rawStatus || '').toUpperCase();
+    const isHardwareTrip = statusUpper === 'TRIP' || statusUpper === 'TRIPPED' || statusUpper === 'CUTOFF' || statusUpper === 'ALERT';
+
     // Update relay state if provided by device
     const wasTripped = this._relay.trip_triggered;
-    if (relay.state || relay.trip_triggered !== undefined) {
+    if (isHardwareTrip) {
+      this._relay.state = 'TRIPPED';
+      this._relay.trip_triggered = true;
+      this._relay.trip_reason = payload.reason || 'HARDWARE_AUTOCUTOFF';
+      if (!wasTripped) this._relay.tripped_at = new Date().toISOString();
+    } else if (relay.state || relay.trip_triggered !== undefined) {
       this._relay = {
         state: relay.state ?? this._relay.state,
         trip_triggered: relay.trip_triggered ?? this._relay.trip_triggered,
@@ -45,16 +82,11 @@ class TelemetryStore {
       };
     }
 
-    const temp = s.temperature ?? 45.0;
-    const vibRms = s.vibration_rms ?? 2.1;
-    const current = s.motor_current ?? 1.35;
-    const acoustic = s.acoustic_db ?? 68.0;
-
     // Determine system status based on sensors and relay
     let system_status = 'normal';
     if (this._relay.state === 'TRIPPED' || this._relay.trip_triggered) {
       system_status = 'critical';
-    } else if (temp > 75 || vibRms > 4.5 || current > 3.0 || acoustic > 85) {
+    } else if (temp > 75 || vibRms > 4.5 || current > 20.0 || acoustic > 85) {
       system_status = 'warning';
     }
 
