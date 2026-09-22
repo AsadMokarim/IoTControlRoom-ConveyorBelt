@@ -42,27 +42,34 @@ class TelemetryStore {
     const rawStatus = payload.status ?? relay.state ?? payload.system_status;
 
     const temp = rawTemp !== undefined ? Number(Number(rawTemp).toFixed(1)) : 45.0;
-    // Current: use magnitude if sensor has DC drift
-    const current = rawCurrent !== undefined ? Number(Math.abs(Number(rawCurrent)).toFixed(2)) : 1.35;
+    // Current: use magnitude; if INA219 raw mA > 50 (e.g. 2200 mA), convert to A
+    let current = rawCurrent !== undefined ? Number(Math.abs(Number(rawCurrent))) : 1.35;
+    if (current > 50) {
+      current = current / 1000;
+    }
+    current = Number(current.toFixed(2));
+
     const vibRms = rawShock !== undefined ? Number(Number(rawShock).toFixed(2)) : 2.1;
 
     // For noise / acoustic:
     // If digital sensor (0 or 1), 0 = normal ambient sound (~54 dB), 1 = spike (>86 dB)
-    let acoustic = 68.0;
+    // If I2S pure_audio (0 to 150000+ where MAX_NOISE = 150000), map dynamically:
+    let acoustic = 54.2;
     if (rawNoise !== undefined) {
       const n = Number(rawNoise);
-      if (n === 0) {
-        acoustic = 54.2;
-      } else if (n === 1) {
-        acoustic = 86.8;
+      if (n <= 1) {
+        acoustic = n === 1 ? 86.8 : 54.2;
+      } else if (n > 150) {
+        const ratio = Math.min(n / 150000, 1.5);
+        acoustic = Number((48 + ratio * 47).toFixed(1));
       } else {
         acoustic = Number(n.toFixed(1));
       }
     }
 
-    // Check status or cutoff from ESP32
+    // Check status or cutoff from ESP32 (including "FAULT" from safety limits)
     const statusUpper = String(rawStatus || '').toUpperCase();
-    const isHardwareTrip = statusUpper === 'TRIP' || statusUpper === 'TRIPPED' || statusUpper === 'CUTOFF' || statusUpper === 'ALERT';
+    const isHardwareTrip = statusUpper === 'FAULT' || statusUpper === 'TRIP' || statusUpper === 'TRIPPED' || statusUpper === 'CUTOFF' || statusUpper === 'ALERT';
 
     // Update relay state if provided by device
     const wasTripped = this._relay.trip_triggered;

@@ -13,87 +13,100 @@ class MqttService {
     this.client = null;
     this.isConnected = false;
     this.esp32Online = false;
+    this.brokerUrl = null;
+    this.messagesReceived = 0;
+    this.lastMessageAt = null;
+    this.lastTopic = null;
   }
 
   init() {
     const candidates = [
       process.env.MQTT_BROKER_URL,
       DEVICES.MQTT.BROKER_URL,
-      DEVICES.MQTT.FALLBACK_URL,
-      'mqtt://127.0.0.1:1883',
       'mqtt://10.42.0.1:1883',
+      'mqtt://127.0.0.1:1883',
       'mqtt://localhost:1883',
     ].filter(Boolean);
     const brokerUrls = [...new Set(candidates)];
-    let currentIdx = 0;
 
-    const connectToBroker = (url) => {
-      console.log(`[MQTT] Attempting connection to broker at ${url}...`);
+    const tryNext = (idx) => {
+      if (idx >= brokerUrls.length) {
+        console.warn('[MQTT] All candidate brokers exhausted. Retrying sequence in 5s...');
+        setTimeout(() => tryNext(0), 5000);
+        return;
+      }
 
-      try {
-        if (this.client) {
-          try { this.client.end(true); } catch (_) {}
+      const url = brokerUrls[idx];
+      this.brokerUrl = url;
+      console.log(`[MQTT] Connecting to broker at ${url} (candidate ${idx + 1}/${brokerUrls.length})...`);
+
+      const client = mqtt.connect(url, {
+        reconnectPeriod: 2500,
+        connectTimeout: 3000,
+        clientId: `iot_dashboard_server_${Math.random().toString(16).slice(2, 8)}`,
+        clean: true,
+      });
+
+      let hasConnected = false;
+      const timeoutTimer = setTimeout(() => {
+        if (!hasConnected) {
+          console.warn(`[MQTT] Timeout connecting to ${url}, attempting next candidate...`);
+          try { client.end(true); } catch (_) {}
+          tryNext(idx + 1);
         }
+      }, 3500);
 
-        this.client = mqtt.connect(url, {
-          reconnectPeriod: 3000,
-          connectTimeout: 4000,
-          clientId: `iot_dashboard_server_${Math.random().toString(16).slice(2, 8)}`,
-          clean: true,
-        });
+      client.on('connect', () => {
+        hasConnected = true;
+        clearTimeout(timeoutTimer);
+        this.client = client;
+        this.isConnected = true;
+        console.log(`[MQTT] ✅ Connected successfully to Mosquitto broker: ${url}`);
 
-        let connectionEstablished = false;
+        // Subscribe to wildcard conveyor/# plus specific telemetry topics
+        const topics = [
+          'conveyor/#',
+          DEVICES.MQTT.TOPICS.TELEMETRY,
+          DEVICES.MQTT.TOPICS.TELEMETRY_LEGACY,
+          DEVICES.MQTT.TOPICS.ALERTS_TRIP,
+          DEVICES.MQTT.TOPICS.STATUS_ESP32,
+        ];
 
-        this.client.on('connect', () => {
-          this.isConnected = true;
-          connectionEstablished = true;
-          console.log(`[MQTT] Successfully connected to broker: ${url}`);
-
-          // Subscribe to wildcard conveyor/# plus specific telemetry topics
-          const topics = [
-            'conveyor/#',
-            DEVICES.MQTT.TOPICS.TELEMETRY,
-            DEVICES.MQTT.TOPICS.TELEMETRY_LEGACY,
-            DEVICES.MQTT.TOPICS.ALERTS_TRIP,
-            DEVICES.MQTT.TOPICS.STATUS_ESP32,
-          ];
-
-          this.client.subscribe(topics, (err) => {
-            if (err) {
-              console.error('[MQTT] Subscription error:', err);
-            } else {
-              console.log(`[MQTT] Subscribed to topics: ${topics.join(', ')}`);
-            }
-          });
-        });
-
-        this.client.on('message', (topic, message) => {
-          this.handleMessage(topic, message.toString());
-        });
-
-        this.client.on('offline', () => {
-          this.isConnected = false;
-          console.warn('[MQTT] Broker connection went offline. Reconnecting in background...');
-        });
-
-        this.client.on('error', (err) => {
-          this.isConnected = false;
-          console.warn(`[MQTT] Broker warning (${url}): ${err.message}`);
-
-          // If never successfully connected to this URL, try the next candidate broker
-          if (!connectionEstablished && currentIdx < brokerUrls.length - 1) {
-            currentIdx++;
-            const nextUrl = brokerUrls[currentIdx];
-            console.log(`[MQTT] Trying next candidate broker URL: ${nextUrl}`);
-            connectToBroker(nextUrl);
+        client.subscribe(topics, (err) => {
+          if (err) {
+            console.error('[MQTT] Subscription error:', err);
+          } else {
+            console.log(`[MQTT] ✅ Subscribed to topics: ${topics.join(', ')}`);
           }
         });
-      } catch (error) {
-        console.error('[MQTT] Initialization error:', error.message);
-      }
+      });
+
+      client.on('message', (topic, message) => {
+        this.messagesReceived++;
+        this.lastMessageAt = new Date().toISOString();
+        this.lastTopic = topic;
+        this.handleMessage(topic, message.toString());
+      });
+
+      client.on('offline', () => {
+        this.isConnected = false;
+        console.warn(`[MQTT] Broker at ${url} went offline. Auto-reconnecting...`);
+      });
+
+      client.on('error', (err) => {
+        this.isConnected = false;
+        if (!hasConnected) {
+          clearTimeout(timeoutTimer);
+          console.warn(`[MQTT] Connection failed at ${url} (${err.message}). Trying next...`);
+          try { client.end(true); } catch (_) {}
+          tryNext(idx + 1);
+        } else {
+          console.warn(`[MQTT] Broker runtime error (${url}): ${err.message}`);
+        }
+      });
     };
 
-    connectToBroker(brokerUrls[0]);
+    tryNext(0);
   }
 
   handleMessage(topic, rawPayload) {

@@ -62,6 +62,10 @@ router.get('/status', (req, res) => {
     ok: true,
     relay: telemetryStore.getRelayState(),
     mqttConnected: mqttClient.isConnected,
+    mqttBroker: mqttClient.brokerUrl,
+    messagesReceived: mqttClient.messagesReceived,
+    lastMessageAt: mqttClient.lastMessageAt,
+    lastTopic: mqttClient.lastTopic,
     esp32Online: mqttClient.esp32Online,
   });
 });

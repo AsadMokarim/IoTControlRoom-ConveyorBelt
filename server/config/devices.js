@@ -4,10 +4,27 @@
  * Configurable via environment variables.
  */
 
+import os from 'os';
+
+function detectBrokerUrl() {
+  if (process.env.MQTT_BROKER_URL) return process.env.MQTT_BROKER_URL;
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const net of interfaces[name] || []) {
+        if (net.address === '10.42.0.1') {
+          return 'mqtt://10.42.0.1:1883';
+        }
+      }
+    }
+  } catch (_) {}
+  return 'mqtt://10.42.0.1:1883';
+}
+
 export const DEVICES = {
   MQTT: {
-    BROKER_URL: process.env.MQTT_BROKER_URL || 'mqtt://127.0.0.1:1883',
-    FALLBACK_URL: process.env.MQTT_FALLBACK_URL || 'mqtt://10.42.0.1:1883',
+    BROKER_URL: detectBrokerUrl(),
+    FALLBACK_URL: 'mqtt://127.0.0.1:1883',
     TOPICS: {
       TELEMETRY: 'conveyor/sensors',
       TELEMETRY_LEGACY: 'conveyor/sensors/telemetry',
