@@ -1,33 +1,34 @@
 import React from 'react';
 
-const AcousticMeter = ({ value }) => {
+const CurrentMeter = ({ value }) => {
   const numVal = Number(value ?? 0);
-  // Map 0 dB - 100 dB to percentage
+  // Scale 0A - 25A across 12 LED segments
   const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
-  const percentage = clamp(numVal, 0, 100) / 100;
+  const percentage = clamp(numVal, 0, 25) / 25;
   const activeBars = Math.ceil(percentage * 12);
 
-  let statusText = 'Normal Audio';
+  let statusText = 'Normal Load';
   let statusColor = '#38bdf8';
+
   if (numVal === 0) {
-    statusText = 'Quiet / Silent';
+    statusText = 'Motor Idle / Off';
     statusColor = '#94a3b8';
-  } else if (numVal >= 88) {
-    statusText = 'Critical Noise';
+  } else if (numVal >= 20) {
+    statusText = 'Overload Warning';
     statusColor = '#ef4444';
-  } else if (numVal >= 75) {
-    statusText = 'Elevated Noise';
+  } else if (numVal >= 12) {
+    statusText = 'Heavy Load';
     statusColor = '#facc15';
   }
 
   return (
-    <div className="widget meter-widget" id="acoustic-widget">
+    <div className="widget meter-widget" id="current-widget">
       <div className="widget-title">
-        <span>Acoustic / Noise</span>
-        <span className="widget-icon">🔊</span>
+        <span>Motor Current</span>
+        <span className="widget-icon">⚡</span>
       </div>
 
-      <div className="audio-meter" id="acoustic-meter">
+      <div className="audio-meter" id="current-meter">
         {Array.from({ length: 12 }).map((_, index) => {
           const isActive = numVal > 0 && index < activeBars;
           let background = '';
@@ -50,9 +51,10 @@ const AcousticMeter = ({ value }) => {
       </div>
 
       <div className="meter-value">
-        <strong id="acoustic-db">{numVal.toFixed(1)}</strong>
-        <small>dB SPL</small>
+        <strong id="motor-current-display">{numVal.toFixed(2)}</strong>
+        <small>Amperes</small>
       </div>
+
       <div style={{ textAlign: 'center', fontSize: '0.75rem', marginTop: '4px', color: statusColor, fontWeight: 600 }}>
         {statusText}
       </div>
@@ -60,4 +62,4 @@ const AcousticMeter = ({ value }) => {
   );
 };
 
-export default AcousticMeter;
+export default CurrentMeter;

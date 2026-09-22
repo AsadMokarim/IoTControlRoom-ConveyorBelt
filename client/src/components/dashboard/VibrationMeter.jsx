@@ -1,24 +1,38 @@
 import React from 'react';
 
 const VibrationMeter = ({ value }) => {
-  const clamp = (val, min, max) => Math.min(Math.max(Number(val) || 0, min), max);
-  const percentage = clamp(value, 0, 20) / 20;
+  const numVal = Number(value ?? 0);
+  const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+  const percentage = clamp(numVal, 0, 10) / 10;
   const activeBars = Math.ceil(percentage * 12);
 
+  let statusText = 'Normal';
+  let statusColor = '#38bdf8';
+  if (numVal === 0) {
+    statusText = 'Smooth / Rest';
+    statusColor = '#94a3b8';
+  } else if (numVal >= 5.0) {
+    statusText = 'Critical Shock';
+    statusColor = '#ef4444';
+  } else if (numVal >= 2.5) {
+    statusText = 'Elevated Shock';
+    statusColor = '#facc15';
+  }
+
   return (
-    <div className="widget meter-widget">
+    <div className="widget meter-widget" id="vibration-widget">
         <div className="widget-title">
-            <span>RMS Vibration</span>
+            <span>Vibration / Shock</span>
             <span className="widget-icon">〽</span>
         </div>
 
         <div className="audio-meter" id="vibration-meter">
             {Array.from({ length: 12 }).map((_, index) => {
-                const isActive = index < activeBars;
+                const isActive = numVal > 0 && index < activeBars;
                 let background = '';
                 if (isActive) {
-                    if (value >= 15) background = '#ef4444';
-                    else if (value >= 8) background = '#facc15';
+                    if (index >= 9) background = '#ef4444';
+                    else if (index >= 6) background = '#facc15';
                     else background = '#38bdf8';
                 }
                 
@@ -35,8 +49,11 @@ const VibrationMeter = ({ value }) => {
         </div>
 
         <div className="meter-value">
-            <strong id="rms-vibration">{value ? value.toFixed(2) : '--'}</strong>
-            <small>mm/s</small>
+            <strong id="rms-vibration">{numVal.toFixed(2)}</strong>
+            <small>g / mm/s</small>
+        </div>
+        <div style={{ textAlign: 'center', fontSize: '0.75rem', marginTop: '4px', color: statusColor, fontWeight: 600 }}>
+          {statusText}
         </div>
     </div>
   );

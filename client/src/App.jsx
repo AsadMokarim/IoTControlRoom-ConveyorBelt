@@ -3,6 +3,7 @@ import HealthScore from './components/dashboard/HealthScore';
 import TemperatureGauge from './components/dashboard/TemperatureGauge';
 import VibrationMeter from './components/dashboard/VibrationMeter';
 import AcousticMeter from './components/dashboard/AcousticMeter';
+import CurrentMeter from './components/dashboard/CurrentMeter';
 import AlertRing from './components/dashboard/AlertRing';
 import RelayStatusBadge from './components/dashboard/RelayStatusBadge';
 import EmergencyStopPanel from './components/dashboard/EmergencyStopPanel';
@@ -96,12 +97,12 @@ function App() {
   const isTripped = relayState?.state === 'TRIPPED' || relayState?.trip_triggered;
   const systemStatus = isTripped || failureStage === 3 ? 'critical' : failureStage >= 1 ? 'warning' : baseStatus;
 
-  const rawAvgTemp = Number(data?.kpis?.average_temperature) || 45;
-  const rawMaxTemp = Number(data?.kpis?.maximum_temperature) || 52;
-  const rawVibration = Number(data?.kpis?.rms_vibration) || 2.1;
-  const rawAcoustic = Number(data?.kpis?.acoustic_db) || 68.4;
-  const rawAlerts = Number(data?.kpis?.active_alerts) || (isTripped ? 1 : 0);
-  const rawCurrent = Number(data?.kpis?.motor_current) || 1.34;
+  const rawAvgTemp = data?.kpis?.average_temperature !== undefined ? Number(data.kpis.average_temperature) : 45;
+  const rawMaxTemp = data?.kpis?.maximum_temperature !== undefined ? Number(data.kpis.maximum_temperature) : 52;
+  const rawVibration = data?.kpis?.rms_vibration !== undefined ? Number(data.kpis.rms_vibration) : 0.0;
+  const rawAcoustic = data?.kpis?.acoustic_db !== undefined ? Number(data.kpis.acoustic_db) : 0.0;
+  const rawAlerts = data?.kpis?.active_alerts !== undefined ? Number(data.kpis.active_alerts) : (isTripped ? 1 : 0);
+  const rawCurrent = data?.kpis?.motor_current !== undefined ? Number(data.kpis.motor_current) : 0.0;
 
   const avgTemp = failureStage === 3 ? rawAvgTemp + 32 : failureStage === 2 ? rawAvgTemp + 20 : failureStage === 1 ? rawAvgTemp + 10 : rawAvgTemp;
   const maxTemp = failureStage === 3 ? 88.6 : failureStage === 2 ? 74.8 : failureStage === 1 ? 58.4 : rawMaxTemp;
@@ -258,7 +259,7 @@ function App() {
                         <div className="telemetry-line">
                           Current:{' '}
                           <span id="twin-val-current">
-                            {motorCurrent > 0 ? `${motorCurrent.toFixed(2)} A` : '0.00 A (TRIPPED)'}
+                            {isTripped ? '0.00 A (TRIPPED)' : `${motorCurrent.toFixed(2)} A`}
                           </span>
                         </div>
                       </div>
@@ -312,17 +313,18 @@ function App() {
               </div>
             </div>
 
-            {/* KPI Widgets Strip including Acoustic Meter */}
+            {/* KPI Widgets Strip including Motor Current, Vibration/Shock, and Acoustic/Noise */}
             <section
               className="widget-grid"
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                 gap: '16px',
               }}
             >
               <TemperatureGauge title="Average Temperature" icon="🌡" value={avgTemp} id="average-temperature" />
               <TemperatureGauge title="Maximum Temperature" icon="🔥" value={maxTemp} id="maximum-temperature" />
+              <CurrentMeter value={motorCurrent} />
               <VibrationMeter value={vibration} />
               <AcousticMeter value={acoustic} />
               <AlertRing count={alerts} />

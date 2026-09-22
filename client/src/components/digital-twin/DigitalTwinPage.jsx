@@ -136,9 +136,10 @@ export default function DigitalTwinPage({ onBack, telemetryData }) {
   }, []);
 
   const systemStatus = telemetryData?.system_status || 'normal';
-  const avgTemp = Number(telemetryData?.kpis?.average_temperature) || 0;
-  const vibration = Number(telemetryData?.kpis?.rms_vibration) || 0;
-  const rawCurrent = Number(telemetryData?.kpis?.motor_current) || 1.34;
+  const avgTemp = telemetryData?.kpis?.average_temperature !== undefined ? Number(telemetryData.kpis.average_temperature) : 0;
+  const vibration = telemetryData?.kpis?.rms_vibration !== undefined ? Number(telemetryData.kpis.rms_vibration) : 0;
+  const rawCurrent = telemetryData?.kpis?.motor_current !== undefined ? Number(telemetryData.kpis.motor_current) : 0.0;
+  const acoustic = telemetryData?.kpis?.acoustic_db !== undefined ? Number(telemetryData.kpis.acoustic_db) : 0.0;
   const motorCurrent = failureStage === 3 ? 0.0 : failureStage === 2 ? 2.45 : failureStage === 1 ? 1.85 : rawCurrent;
   const motorRunning = failureStage !== 3 && systemStatus !== 'critical';
   const timeSinceUpdate = Math.floor((Date.now() - lastUpdateTime) / 1000);
@@ -270,8 +271,10 @@ export default function DigitalTwinPage({ onBack, telemetryData }) {
               }}>Live Readings</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                 {[
-                  { label: 'VIB RMS', value: vibration.toFixed(2), unit: 'mm/s', warning: vibration > 5, critical: vibration > 7 },
+                  { label: 'CURRENT', value: motorCurrent.toFixed(2), unit: 'A', warning: motorCurrent > 15, critical: motorCurrent > 20 },
+                  { label: 'VIB / SHOCK', value: vibration.toFixed(2), unit: 'mm/s', warning: vibration > 5, critical: vibration > 7 },
                   { label: 'TEMP AVG', value: avgTemp.toFixed(1), unit: '°C', warning: avgTemp > 65, critical: avgTemp > 80 },
+                  { label: 'ACOUSTIC', value: acoustic.toFixed(1), unit: 'dB', warning: acoustic > 75, critical: acoustic > 88 },
                   { label: 'MOTOR', value: motorRunning ? 'RUNNING' : 'STOPPED', unit: '', isStatus: true, running: motorRunning },
                   { label: 'LOAD', value: '80', unit: '%' },
                 ].map(item => (
@@ -508,10 +511,10 @@ export default function DigitalTwinPage({ onBack, telemetryData }) {
             </div>
             {[
               { label: 'Temp', value: `${avgTemp.toFixed(1)}°C` },
-              { label: 'Vibration', value: `${vibration < 3 ? 'normal' : vibration < 5 ? 'elevated' : 'critical'}` },
-              { label: 'Current', value: motorCurrent > 0 ? `${motorCurrent.toFixed(2)} A` : '0.00 A (OFF)' },
-              { label: 'Load', value: '80%' },
-              { label: 'Noise', value: `${vibration < 3 ? 'normal' : vibration < 5 ? 'moderate' : 'high'}` },
+              { label: 'Current', value: `${motorCurrent.toFixed(2)} A` },
+              { label: 'Shock / Vib', value: `${vibration.toFixed(2)} mm/s` },
+              { label: 'Acoustic', value: `${acoustic.toFixed(1)} dB` },
+              { label: 'Motor State', value: motorRunning ? 'RUNNING' : 'STOPPED' },
             ].map(item => (
               <div key={item.label} style={{
                 display: 'flex', justifyContent: 'space-between',
