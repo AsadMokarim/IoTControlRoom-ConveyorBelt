@@ -24,19 +24,32 @@ app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 // ============================================================================
-// ESP32-CAM MJPEG Video Relay Proxy
+// ESP32-CAM MJPEG Video Relay Proxy (Dual-mode: Native Stream + Capture Fallback)
 // ============================================================================
 const ESP32_CAM_URL = process.env.ESP32_CAM_STREAM_URL || 'http://10.42.0.118:81/stream';
+
+let esp32Host = '10.42.0.118';
+try {
+  const parsed = new URL(ESP32_CAM_URL);
+  esp32Host = parsed.hostname;
+} catch (_) {}
+
+const ESP32_CAM_CAPTURE_URL = process.env.ESP32_CAM_CAPTURE_URL || `http://${esp32Host}:80/capture`;
+const PART_BOUNDARY = '123456789000000000000987654321';
 
 // Maintain array of connected client response objects
 const streamClients = [];
 
 // Boundary header format used by ESP32-CAM CameraWebServer
-let cameraContentType = 'multipart/x-mixed-replace; boundary=123456789000000000000987654321';
+let cameraContentType = `multipart/x-mixed-replace; boundary=${PART_BOUNDARY}`;
 let activeCamReq = null;
 let reconnectTimer = null;
+let captureTimer = null;
+let isCaptureFallbackActive = false;
+let isFetchingCapture = false;
+let lastFrameChunk = null;
 
-// Pipe incoming data chunks from the camera stream directly to all connected clients
+// Pipe incoming data chunks directly to all connected clients
 function broadcastChunkToClients(chunk) {
   for (let i = streamClients.length - 1; i >= 0; i--) {
     const client = streamClients[i];
@@ -62,9 +75,81 @@ function cleanupCameraConnection() {
   }
 }
 
-function scheduleCameraReconnect(delayMs = 2500) {
+// Fallback: poll /capture on port 80 when port 81 native stream is unavailable
+function startCaptureFallback() {
+  if (isCaptureFallbackActive) return;
+  isCaptureFallbackActive = true;
+  console.log(`[MJPEG Relay] Activated capture fallback via ${ESP32_CAM_CAPTURE_URL}`);
+
+  const pollCapture = () => {
+    if (!isCaptureFallbackActive) return;
+
+    // If no client is watching, poll at lower frequency (500ms) to conserve ESP32 CPU
+    const nextInterval = streamClients.length === 0 ? 500 : 70; // ~14 fps
+
+    if (isFetchingCapture) {
+      captureTimer = setTimeout(pollCapture, 50);
+      return;
+    }
+
+    isFetchingCapture = true;
+    const req = http.get(ESP32_CAM_CAPTURE_URL, (res) => {
+      if (res.statusCode !== 200) {
+        res.resume();
+        isFetchingCapture = false;
+        captureTimer = setTimeout(pollCapture, 500);
+        return;
+      }
+
+      const chunks = [];
+      res.on('data', (c) => chunks.push(c));
+      res.on('end', () => {
+        isFetchingCapture = false;
+        const imgBuf = Buffer.concat(chunks);
+        if (imgBuf.length > 0) {
+          const header = Buffer.from(
+            `--${PART_BOUNDARY}\r\nContent-Type: image/jpeg\r\nContent-Length: ${imgBuf.length}\r\n\r\n`
+          );
+          const fullChunk = Buffer.concat([header, imgBuf, Buffer.from('\r\n')]);
+          lastFrameChunk = fullChunk;
+          broadcastChunkToClients(fullChunk);
+        }
+        if (isCaptureFallbackActive) {
+          captureTimer = setTimeout(pollCapture, nextInterval);
+        }
+      });
+      res.on('error', () => {
+        isFetchingCapture = false;
+        if (isCaptureFallbackActive) captureTimer = setTimeout(pollCapture, 500);
+      });
+    });
+
+    req.on('error', () => {
+      isFetchingCapture = false;
+      if (isCaptureFallbackActive) captureTimer = setTimeout(pollCapture, 1000);
+    });
+
+    req.setTimeout(3000, () => {
+      req.destroy();
+      isFetchingCapture = false;
+    });
+  };
+
+  pollCapture();
+}
+
+function stopCaptureFallback() {
+  if (!isCaptureFallbackActive) return;
+  isCaptureFallbackActive = false;
+  if (captureTimer) {
+    clearTimeout(captureTimer);
+    captureTimer = null;
+  }
+  console.log('[MJPEG Relay] Deactivated capture fallback (native stream resumed)');
+}
+
+function scheduleCameraReconnect(delayMs = 3000) {
   if (reconnectTimer) return;
-  console.log(`[MJPEG Relay] Scheduling camera reconnect in ${delayMs / 1000}s...`);
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null;
     connectToCameraStream();
@@ -79,62 +164,74 @@ function connectToCameraStream() {
     reconnectTimer = null;
   }
 
-  console.log(`[MJPEG Relay] Connecting to ESP32-CAM stream at ${ESP32_CAM_URL}...`);
+  console.log(`[MJPEG Relay] Probing ESP32-CAM native stream at ${ESP32_CAM_URL}...`);
 
   try {
     const req = http.get(ESP32_CAM_URL, (camRes) => {
       if (camRes.statusCode !== 200) {
-        console.warn(`[MJPEG Relay] ESP32-CAM returned status HTTP ${camRes.statusCode}. Retrying in 3s...`);
-        camRes.resume(); // Drain stream to release resources
+        console.warn(`[MJPEG Relay] Native stream returned status HTTP ${camRes.statusCode}. Using capture fallback.`);
+        camRes.resume();
         cleanupCameraConnection();
-        scheduleCameraReconnect(3000);
+        startCaptureFallback();
+        scheduleCameraReconnect(8000);
         return;
       }
 
-      console.log('[MJPEG Relay] Successfully connected to ESP32-CAM stream');
+      console.log('[MJPEG Relay] Connected to ESP32-CAM native stream!');
+      stopCaptureFallback();
+
       if (camRes.headers['content-type']) {
         cameraContentType = camRes.headers['content-type'];
       }
 
       // Pipe data chunks directly to all connected clients
       camRes.on('data', (chunk) => {
+        lastFrameChunk = chunk;
         broadcastChunkToClients(chunk);
       });
 
       camRes.on('end', () => {
-        console.warn('[MJPEG Relay] ESP32-CAM stream ended. Reconnecting...');
+        console.warn('[MJPEG Relay] Native camera stream ended. Retrying...');
         cleanupCameraConnection();
-        scheduleCameraReconnect(2000);
+        startCaptureFallback();
+        scheduleCameraReconnect(3000);
       });
 
       camRes.on('close', () => {
-        console.warn('[MJPEG Relay] ESP32-CAM stream closed. Reconnecting...');
+        console.warn('[MJPEG Relay] Native camera stream closed. Retrying...');
         cleanupCameraConnection();
-        scheduleCameraReconnect(2000);
+        startCaptureFallback();
+        scheduleCameraReconnect(3000);
       });
 
       camRes.on('error', (err) => {
-        console.error('[MJPEG Relay] Stream error:', err.message);
+        console.error('[MJPEG Relay] Native stream error:', err.message);
         cleanupCameraConnection();
-        scheduleCameraReconnect(3000);
+        startCaptureFallback();
+        scheduleCameraReconnect(5000);
       });
     });
 
     req.on('error', (err) => {
-      console.error(`[MJPEG Relay] Camera connection error (${err.message}). Retrying in 3s...`);
+      console.warn(`[MJPEG Relay] Native stream port 81 offline (${err.message}). Activating fallback.`);
       cleanupCameraConnection();
-      scheduleCameraReconnect(3000);
+      startCaptureFallback();
+      scheduleCameraReconnect(8000);
     });
 
-    req.setTimeout(10000, () => {
-      console.warn('[MJPEG Relay] Connection timed out after 10s. Aborting socket...');
+    // 2.5s connect timeout for port 81
+    req.setTimeout(2500, () => {
+      console.warn('[MJPEG Relay] Port 81 timed out. Activating fallback...');
       req.destroy();
+      startCaptureFallback();
+      scheduleCameraReconnect(8000);
     });
 
     activeCamReq = req;
   } catch (err) {
     console.error('[MJPEG Relay] Unexpected connection error:', err.message);
-    scheduleCameraReconnect(3000);
+    startCaptureFallback();
+    scheduleCameraReconnect(8000);
   }
 }
 
@@ -151,6 +248,13 @@ app.get('/api/stream', (req, res) => {
     'Connection': 'close',
     'Access-Control-Allow-Origin': '*',
   });
+
+  // If a frame is already cached, send immediately for instant display
+  if (lastFrameChunk) {
+    try {
+      res.write(lastFrameChunk);
+    } catch (_) {}
+  }
 
   streamClients.push(res);
   console.log(`[MJPEG Relay] Client connected to /api/stream (${streamClients.length} active)`);

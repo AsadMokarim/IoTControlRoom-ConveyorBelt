@@ -77,6 +77,7 @@ export const DEVICES = {
       ip: process.env.CAM1_IP || '10.42.0.118',
       port: Number(process.env.CAM1_PORT) || 81,
       streamPath: '/stream',
+      proxyUrl: '/api/stream',
     },
     {
       id: 'cam_2',

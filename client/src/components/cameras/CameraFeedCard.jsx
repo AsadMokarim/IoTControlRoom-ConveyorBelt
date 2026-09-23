@@ -10,7 +10,14 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
   const [editPort, setEditPort] = useState(port);
   const cardRef = useRef(null);
 
-  const streamUrl = `http://${ip}:${port}${streamPath}${retryKey ? `?t=${retryKey}` : ''}`;
+  const [useProxy, setUseProxy] = useState(() => {
+    return Boolean(camera.proxyUrl || id === 'cam_1');
+  });
+
+  const baseStreamUrl = useProxy
+    ? (camera.proxyUrl || '/api/stream')
+    : `http://${ip}:${port}${streamPath}`;
+  const streamUrl = `${baseStreamUrl}${baseStreamUrl.includes('?') ? '&' : '?'}t=${retryKey}`;
 
   const handleReload = () => {
     setHasError(false);
@@ -110,6 +117,25 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
             }}
           >
             ⚙️ Edit IP
+          </button>
+          <button
+            onClick={() => {
+              setUseProxy((p) => !p);
+              handleReload();
+            }}
+            title={useProxy ? "Relay Proxy active (/api/stream). Click to switch to Direct." : "Direct ESP32 active. Click to switch to Relay Proxy."}
+            style={{
+              background: useProxy ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255,255,255,0.08)',
+              border: useProxy ? '1px solid #38bdf8' : 'none',
+              color: useProxy ? '#38bdf8' : '#94a3b8',
+              borderRadius: '4px',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+            }}
+          >
+            {useProxy ? '📡 Proxy' : '🌐 Direct'}
           </button>
           <button
             onClick={handleReload}

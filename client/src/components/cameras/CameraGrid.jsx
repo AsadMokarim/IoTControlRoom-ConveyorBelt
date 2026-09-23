@@ -8,6 +8,7 @@ const defaultCameras = [
     ip: '10.42.0.118',
     port: 81,
     streamPath: '/stream',
+    proxyUrl: '/api/stream',
   },
   {
     id: 'cam_2',
@@ -43,6 +44,7 @@ const CameraGrid = () => {
                 ...serverCam,
                 ip: savedOverride || serverCam.ip,
                 port: Number(serverCam.port) || 81,
+                proxyUrl: serverCam.proxyUrl || (serverCam.id === 'cam_1' ? '/api/stream' : undefined),
               };
             })
           );
