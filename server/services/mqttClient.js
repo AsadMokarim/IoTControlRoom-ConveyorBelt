@@ -118,11 +118,18 @@ class MqttService {
         topic.startsWith('conveyor/sensors') ||
         topic === 'conveyor'
       ) {
-        const data = JSON.parse(rawPayload);
+        // Sanitize non-standard JSON literals (e.g., nan, -nan, +nan, NaN, infinity emitted by microcontrollers)
+        const cleanedPayload = typeof rawPayload === 'string'
+          ? rawPayload.replace(/([:,\[]\s*)[-+]?(?:nan|infinity|inf)\b/gi, '$1null')
+          : rawPayload;
+        const data = JSON.parse(cleanedPayload);
         console.log(`[MQTT INGEST] [${topic}] temp=${data.temp ?? data.temperature ?? '--'} current=${data.current ?? data.motor_current ?? '--'} shock=${data.shock ?? data.vibration ?? '--'}`);
         telemetryStore.updateFromDevice(data);
       } else if (topic.includes('alerts') || topic.includes('trip')) {
-        const tripData = JSON.parse(rawPayload);
+        const cleanedPayload = typeof rawPayload === 'string'
+          ? rawPayload.replace(/([:,\[]\s*)[-+]?(?:nan|infinity|inf)\b/gi, '$1null')
+          : rawPayload;
+        const tripData = JSON.parse(cleanedPayload);
         console.warn('[MQTT ALERT] Hardware trip received:', tripData);
         telemetryStore.setRelayState({
           state: 'TRIPPED',

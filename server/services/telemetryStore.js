@@ -35,35 +35,44 @@ class TelemetryStore {
     // Extract raw fields supporting both flat and nested schemas:
     // Flat: {"temp":32.81, "current":2.90, "shock":1.00, "noise":0, "status":"OK"}
     // Nested: { sensors: { temperature: 32.81, ... }, relay: { ... } }
-    const rawTemp = payload.temp ?? payload.temperature ?? s.temperature ?? s.temp;
-    const rawCurrent = payload.current ?? payload.motor_current ?? s.motor_current ?? s.current;
-    const rawShock = payload.shock ?? payload.vibration ?? payload.vibration_rms ?? s.vibration_rms ?? s.shock;
-    const rawNoise = payload.noise ?? payload.acoustic_db ?? s.acoustic_db ?? s.noise;
+    const rawTemp = payload.temp !== undefined ? payload.temp : (payload.temperature !== undefined ? payload.temperature : (s.temperature ?? s.temp));
+    const rawCurrent = payload.current !== undefined ? payload.current : (payload.motor_current !== undefined ? payload.motor_current : (s.motor_current ?? s.current));
+    const rawShock = payload.shock !== undefined ? payload.shock : (payload.vibration !== undefined ? payload.vibration : (payload.vibration_rms ?? s.vibration_rms ?? s.shock));
+    const rawNoise = payload.noise !== undefined ? payload.noise : (payload.acoustic_db !== undefined ? payload.acoustic_db : (s.acoustic_db ?? s.noise));
     const rawStatus = payload.status ?? relay.state ?? payload.system_status;
 
-    const temp = rawTemp !== undefined ? Number(Number(rawTemp).toFixed(1)) : 45.0;
-    // Current: use magnitude; if INA219 raw mA > 50 (e.g. 2200 mA), convert to A
-    let current = rawCurrent !== undefined ? Number(Math.abs(Number(rawCurrent))) : 1.35;
-    if (current > 50) {
-      current = current / 1000;
-    }
-    current = Number(current.toFixed(2));
+    const numTemp = rawTemp !== undefined && rawTemp !== null ? Number(rawTemp) : NaN;
+    const temp = !isNaN(numTemp) ? Number(numTemp.toFixed(1)) : 45.0;
 
-    const vibRms = rawShock !== undefined ? Number(Number(rawShock).toFixed(2)) : 2.1;
+    // Current: if sensor is offline / disconnected (null, NaN), default cleanly to 0.00 A
+    let current = 0.0;
+    if (rawCurrent !== undefined && rawCurrent !== null) {
+      const numCurrent = Number(rawCurrent);
+      if (!isNaN(numCurrent)) {
+        let absCurrent = Math.abs(numCurrent);
+        if (absCurrent > 50) absCurrent = absCurrent / 1000;
+        current = Number(absCurrent.toFixed(2));
+      }
+    }
+
+    const numShock = rawShock !== undefined && rawShock !== null ? Number(rawShock) : NaN;
+    const vibRms = !isNaN(numShock) ? Number(numShock.toFixed(2)) : 0.0;
 
     // For noise / acoustic:
     // If digital sensor (0 or 1), 0 = normal ambient sound (~54 dB), 1 = spike (>86 dB)
     // If I2S pure_audio (0 to 150000+ where MAX_NOISE = 150000), map dynamically:
     let acoustic = 54.2;
-    if (rawNoise !== undefined) {
+    if (rawNoise !== undefined && rawNoise !== null) {
       const n = Number(rawNoise);
-      if (n <= 1) {
-        acoustic = n === 1 ? 86.8 : 54.2;
-      } else if (n > 150) {
-        const ratio = Math.min(n / 150000, 1.5);
-        acoustic = Number((48 + ratio * 47).toFixed(1));
-      } else {
-        acoustic = Number(n.toFixed(1));
+      if (!isNaN(n)) {
+        if (n <= 1) {
+          acoustic = n === 1 ? 86.8 : 54.2;
+        } else if (n > 150) {
+          const ratio = Math.min(n / 150000, 1.5);
+          acoustic = Number((48 + ratio * 47).toFixed(1));
+        } else {
+          acoustic = Number(n.toFixed(1));
+        }
       }
     }
 
