@@ -78,4 +78,21 @@ router.get('/devices', (req, res) => {
   });
 });
 
+// Update camera IP/port dynamically from frontend
+router.post('/devices/camera', (req, res) => {
+  try {
+    const { id, ip, port } = req.body || {};
+    const cam = DEVICES.CAMERAS.find((c) => c.id === id);
+    if (!cam) {
+      return res.status(404).json({ ok: false, error: `Camera ${id} not found` });
+    }
+    if (ip) cam.ip = String(ip).trim();
+    if (port) cam.port = Number(port);
+    console.log(`[Camera] Updated ${id} endpoint to ${cam.ip}:${cam.port}`);
+    res.json({ ok: true, camera: cam, cameras: DEVICES.CAMERAS });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 export default router;
