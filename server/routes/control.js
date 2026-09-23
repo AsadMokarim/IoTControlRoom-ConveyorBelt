@@ -5,8 +5,8 @@ import { DEVICES } from '../config/devices.js';
 
 const router = Router();
 
-// Trigger emergency cutoff
-router.post('/cutoff', async (req, res) => {
+// Handler for Emergency Stop (/cutoff and /stop)
+const handleStop = async (req, res) => {
   try {
     const { reason = 'MANUAL_STOP' } = req.body || {};
 
@@ -17,23 +17,27 @@ router.post('/cutoff', async (req, res) => {
       trip_reason: reason,
     });
 
-    // 2. Publish to MQTT for ESP32 hardware relay
-    const mqttResult = await mqttClient.publishRelayCommand('CUTOFF', reason);
+    // 2. Publish "STOP" to conveyor/control MQTT
+    const mqttResult = await mqttClient.publishControlCommand('STOP', reason);
 
     res.json({
       ok: true,
+      action: 'STOP',
       relay_state: 'TRIPPED',
       trip_reason: reason,
       mqtt: mqttResult,
     });
   } catch (err) {
-    console.error('Error triggering cutoff:', err);
+    console.error('Error triggering emergency stop:', err);
     res.status(500).json({ ok: false, error: err.message });
   }
-});
+};
 
-// Reset relay / resume motor
-router.post('/reset', async (req, res) => {
+router.post('/cutoff', handleStop);
+router.post('/stop', handleStop);
+
+// Handler for Reset & Start (/reset and /start)
+const handleStart = async (req, res) => {
   try {
     // 1. Update local state
     telemetryStore.setRelayState({
@@ -42,19 +46,23 @@ router.post('/reset', async (req, res) => {
       trip_reason: 'NONE',
     });
 
-    // 2. Publish to MQTT for ESP32
-    const mqttResult = await mqttClient.publishRelayCommand('RESET', 'OPERATOR_RESET');
+    // 2. Publish "START" to conveyor/control MQTT
+    const mqttResult = await mqttClient.publishControlCommand('START', 'OPERATOR_RESET');
 
     res.json({
       ok: true,
+      action: 'START',
       relay_state: 'CLOSED',
       mqtt: mqttResult,
     });
   } catch (err) {
-    console.error('Error triggering reset:', err);
+    console.error('Error triggering start/reset:', err);
     res.status(500).json({ ok: false, error: err.message });
   }
-});
+};
+
+router.post('/reset', handleStart);
+router.post('/start', handleStart);
 
 // Get current relay & control status
 router.get('/status', (req, res) => {

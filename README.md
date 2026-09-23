@@ -128,16 +128,20 @@ Published by the ESP32 every 500ms–2000ms:
 ```
 *Note: The backend also supports legacy topic `conveyor/sensors/telemetry` and nested payload schemas (`sensors: { ... }`).*
 
-### 2. Relay Control Topic: `conveyor/control/relay`
-Published by the Dashboard to trigger or reset the hardware relay:
-```json
-{
-  "action": "CUTOFF",
-  "reason": "OPERATOR_EMERGENCY_STOP",
-  "timestamp": "2026-09-23T01:30:00.000Z"
-}
-```
-Actions: `"CUTOFF"` | `"RESET"`
+### 2. Conveyor Control Topic: `conveyor/control`
+Published to trigger emergency cutoff or resume the motor contactor:
+- **Terminal CLI Usage**:
+  ```bash
+  # Emergency Stop:
+  mosquitto_pub -h 10.42.0.1 -t "conveyor/control" -m "STOP"
+
+  # Reset & Start:
+  mosquitto_pub -h 10.42.0.1 -t "conveyor/control" -m "START"
+  ```
+- **Web UI & REST API Endpoints**:
+  - `POST /api/control/stop` (or `/api/control/cutoff`) $\rightarrow$ publishes `"STOP"`
+  - `POST /api/control/start` (or `/api/control/reset`) $\rightarrow$ publishes `"START"`
+- *Also supported on `conveyor/control/relay` with JSON payload `{ "action": "STOP" | "START" }`.*
 
 ### 3. Hardware Alert Topic: `conveyor/alerts/trip`
 Published by the ESP32 when an autonomous safety limit is breached:

@@ -62,10 +62,11 @@ export const DEVICES = {
     BROKER_URL: detectBrokerUrl(),
     FALLBACK_URL: 'mqtt://127.0.0.1:1883',
     TOPICS: {
+      CONTROL: process.env.MQTT_CONTROL_TOPIC || 'conveyor/control',
+      CONTROL_RELAY: 'conveyor/control/relay',
       TELEMETRY: 'conveyor/sensors',
       TELEMETRY_LEGACY: 'conveyor/sensors/telemetry',
       ALL_CONVEYOR: 'conveyor/#',
-      CONTROL_RELAY: 'conveyor/control/relay',
       ALERTS_TRIP: 'conveyor/alerts/trip',
       STATUS_ESP32: 'conveyor/status/esp32',
     },

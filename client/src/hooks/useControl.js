@@ -9,16 +9,16 @@ export const useControl = () => {
     setIsPending(true);
     setLastError(null);
     try {
-      const res = await fetch('/api/control/cutoff', {
+      const res = await fetch('/api/control/stop', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason, source: 'dashboard' }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || 'Failed to trigger cutoff');
+        throw new Error(json.error || 'Failed to trigger emergency stop');
       }
-      setActionMessage('Emergency cutoff command dispatched to ESP32 relay.');
+      setActionMessage('🛑 STOP signal dispatched to "conveyor/control". Motor contactor opened.');
       return json;
     } catch (err) {
       setLastError(err.message);
@@ -32,16 +32,16 @@ export const useControl = () => {
     setIsPending(true);
     setLastError(null);
     try {
-      const res = await fetch('/api/control/reset', {
+      const res = await fetch('/api/control/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ source: 'dashboard' }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || 'Failed to reset relay');
+        throw new Error(json.error || 'Failed to send start/reset signal');
       }
-      setActionMessage('Motor reset command sent. Relay closed.');
+      setActionMessage('🔄 START signal dispatched to "conveyor/control". Motor armed.');
       return json;
     } catch (err) {
       setLastError(err.message);
@@ -53,7 +53,9 @@ export const useControl = () => {
 
   return {
     triggerCutoff,
+    triggerStop: triggerCutoff,
     triggerReset,
+    triggerStart: triggerReset,
     isPending,
     lastError,
     actionMessage,

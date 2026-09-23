@@ -33,7 +33,8 @@ const char* CLIENT_ID       = "ESP32_CONVEYOR_SAFETY_01";
 
 // MQTT Topics
 const char* TOPIC_TELEMETRY = "conveyor/sensors/telemetry";
-const char* TOPIC_CONTROL   = "conveyor/control/relay";
+const char* TOPIC_CONTROL   = "conveyor/control";
+const char* TOPIC_CONTROL_ALT = "conveyor/control/relay";
 const char* TOPIC_ALERTS    = "conveyor/alerts/trip";
 const char* TOPIC_STATUS    = "conveyor/status/esp32";
 
@@ -141,6 +142,19 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
 
   Serial.printf("[MQTT RX] Topic: %s | Payload: %s\n", topic, message);
 
+  // 1. Direct plain string commands (matching terminal mosquitto_pub -m "STOP" or "START")
+  if (strcasecmp(message, "STOP") == 0 || strcasecmp(message, "CUTOFF") == 0) {
+    Serial.println("[MQTT RX] Direct STOP signal detected.");
+    tripRelay("REMOTE_EMERGENCY_STOP");
+    return;
+  }
+  if (strcasecmp(message, "START") == 0 || strcasecmp(message, "RESET") == 0) {
+    Serial.println("[MQTT RX] Direct START signal detected.");
+    resetRelay();
+    return;
+  }
+
+  // 2. Fallback to JSON payload parsing
   StaticJsonDocument<256> doc;
   DeserializationError err = deserializeJson(doc, message);
   if (err) {
@@ -151,10 +165,10 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
   const char* action = doc["action"];
   if (!action) return;
 
-  if (strcmp(action, "CUTOFF") == 0) {
+  if (strcasecmp(action, "STOP") == 0 || strcasecmp(action, "CUTOFF") == 0) {
     const char* reason = doc["reason"] | "DASHBOARD_MANUAL_STOP";
     tripRelay(String(reason));
-  } else if (strcmp(action, "RESET") == 0) {
+  } else if (strcasecmp(action, "START") == 0 || strcasecmp(action, "RESET") == 0) {
     resetRelay();
   }
 }
@@ -168,9 +182,10 @@ void connectMqtt() {
       Serial.println(" Connected!");
       // Publish online status (retained)
       mqtt.publish(TOPIC_STATUS, "online", true);
-      // Subscribe to control commands
+      // Subscribe to control commands on both topics
       mqtt.subscribe(TOPIC_CONTROL, 1);
-      Serial.printf("[MQTT] Subscribed to %s\n", TOPIC_CONTROL);
+      mqtt.subscribe(TOPIC_CONTROL_ALT, 1);
+      Serial.printf("[MQTT] Subscribed to %s and %s\n", TOPIC_CONTROL, TOPIC_CONTROL_ALT);
     } else {
       Serial.printf(" Failed, rc=%d. Retrying in 2s...\n", mqtt.state());
       delay(2000);

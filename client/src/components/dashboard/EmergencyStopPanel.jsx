@@ -35,7 +35,7 @@ const EmergencyStopPanel = ({ relayState, onCutoff, onReset, isPending }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '1.25rem' }}>⚡</span>
             <h2 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 700, color: 'var(--text, #e2e8f0)' }}>
-              Hardware Motor Control & Auto-Cutoff
+              Hardware Motor Control & Safety Relay
             </h2>
             <span
               style={{
@@ -47,13 +47,13 @@ const EmergencyStopPanel = ({ relayState, onCutoff, onReset, isPending }) => {
                 color: isTripped ? '#ef4444' : '#22c55e',
               }}
             >
-              {isTripped ? 'RELAY OPEN (TRIPPED)' : 'RELAY CLOSED (ARMED)'}
+              {isTripped ? 'MOTOR STOPPED (RELAY OPEN)' : 'MOTOR RUNNING (RELAY CLOSED)'}
             </span>
           </div>
           <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--muted, #94a3b8)' }}>
             {isTripped
-              ? `Safety cut-off active: ${relayState?.trip_reason || 'Unknown cause'}${relayState?.tripped_at ? ` at ${relayState.tripped_at}` : ''}`
-              : 'Direct MQTT safety circuit to ESP32 relay GPIO 26. Immediate autonomous shutoff on threshold breach.'}
+              ? `Safety stop active: ${relayState?.trip_reason || 'Manual stop'}${relayState?.tripped_at ? ` at ${relayState.tripped_at}` : ''} | MQTT topic: conveyor/control`
+              : 'Direct MQTT safety control via conveyor/control. Publishes "STOP" to trip circuit and "START" to resume.'}
           </p>
         </div>
 
@@ -84,6 +84,7 @@ const EmergencyStopPanel = ({ relayState, onCutoff, onReset, isPending }) => {
           <button
             onClick={handleCutoffClick}
             disabled={isPending || isTripped}
+            title='Publishes "STOP" to conveyor/control'
             style={{
               padding: '10px 20px',
               borderRadius: '6px',
@@ -102,13 +103,14 @@ const EmergencyStopPanel = ({ relayState, onCutoff, onReset, isPending }) => {
             }}
           >
             <span>🛑</span>
-            {isPending ? 'TRANSMITTING...' : 'EMERGENCY STOP'}
+            {isPending ? 'TRANSMITTING...' : 'EMERGENCY STOP (STOP)'}
           </button>
 
-          {/* Reset Button */}
+          {/* Reset & Start Button */}
           <button
             onClick={handleResetClick}
             disabled={isPending || !isTripped}
+            title='Publishes "START" to conveyor/control'
             style={{
               padding: '10px 18px',
               borderRadius: '6px',
@@ -126,7 +128,7 @@ const EmergencyStopPanel = ({ relayState, onCutoff, onReset, isPending }) => {
             }}
           >
             <span>🔄</span>
-            RESET & REARM
+            RESET TO START (START)
           </button>
         </div>
       </div>

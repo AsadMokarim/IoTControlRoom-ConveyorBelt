@@ -63,20 +63,22 @@ class MqttService {
         this.isConnected = true;
         console.log(`[MQTT] ✅ Connected successfully to Mosquitto broker: ${url}`);
 
-        // Subscribe to wildcard conveyor/# plus specific telemetry topics
+        // Subscribe to wildcard conveyor/# plus specific telemetry and control topics
         const topics = [
           'conveyor/#',
+          DEVICES.MQTT.TOPICS.CONTROL,
+          DEVICES.MQTT.TOPICS.CONTROL_RELAY,
           DEVICES.MQTT.TOPICS.TELEMETRY,
           DEVICES.MQTT.TOPICS.TELEMETRY_LEGACY,
           DEVICES.MQTT.TOPICS.ALERTS_TRIP,
           DEVICES.MQTT.TOPICS.STATUS_ESP32,
-        ];
+        ].filter(Boolean);
 
         client.subscribe(topics, (err) => {
           if (err) {
             console.error('[MQTT] Subscription error:', err);
           } else {
-            console.log(`[MQTT] ✅ Subscribed to topics: ${topics.join(', ')}`);
+            console.log(`[MQTT] ✅ Subscribed to topics: ${[...new Set(topics)].join(', ')}`);
           }
         });
       });
@@ -111,7 +113,49 @@ class MqttService {
 
   handleMessage(topic, rawPayload) {
     try {
-      // Ingest sensor telemetry from conveyor/sensors, conveyor/sensors/telemetry, or any conveyor/sensors/*
+      const rawText = typeof rawPayload === 'string' ? rawPayload.trim() : String(rawPayload).trim();
+      const upper = rawText.toUpperCase();
+
+      // 1. Control commands received via MQTT (e.g., mosquitto_pub -t "conveyor/control" -m "STOP" or "START")
+      const isControlTopic =
+        topic === DEVICES.MQTT.TOPICS.CONTROL ||
+        topic === 'conveyor/control' ||
+        topic === DEVICES.MQTT.TOPICS.CONTROL_RELAY ||
+        topic === 'conveyor/control/relay' ||
+        topic.endsWith('/control');
+
+      if (isControlTopic) {
+        let action = upper;
+        let reason = 'MQTT_EXTERNAL_SIGNAL';
+
+        if (rawText.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(rawText);
+            if (parsed.action) action = String(parsed.action).toUpperCase();
+            if (parsed.reason) reason = parsed.reason;
+          } catch (_) {}
+        }
+
+        if (action === 'STOP' || action === 'CUTOFF') {
+          console.warn(`[MQTT RX] 🛑 Emergency STOP received on "${topic}" (${reason})`);
+          telemetryStore.setRelayState({
+            state: 'TRIPPED',
+            trip_triggered: true,
+            trip_reason: reason === 'MQTT_EXTERNAL_SIGNAL' ? 'EMERGENCY_STOP' : reason,
+          });
+          return;
+        } else if (action === 'START' || action === 'RESET') {
+          console.log(`[MQTT RX] 🔄 START / RESET received on "${topic}"`);
+          telemetryStore.setRelayState({
+            state: 'CLOSED',
+            trip_triggered: false,
+            trip_reason: 'NONE',
+          });
+          return;
+        }
+      }
+
+      // 2. Ingest sensor telemetry from conveyor/sensors, conveyor/sensors/telemetry, or any conveyor/sensors/*
       if (
         topic === 'conveyor/sensors' ||
         topic === 'conveyor/sensors/telemetry' ||
@@ -147,36 +191,70 @@ class MqttService {
   }
 
   /**
-   * Publish command to ESP32 relay (e.g., 'CUTOFF' or 'RESET')
+   * Publish control command (STOP / START) to conveyor/control.
+   * Matches terminal commands:
+   *   mosquitto_pub -h 10.42.0.1 -t "conveyor/control" -m "STOP"
+   *   mosquitto_pub -h 10.42.0.1 -t "conveyor/control" -m "START"
    */
-  publishRelayCommand(action, reason = 'OPERATOR_ACTION') {
+  publishControlCommand(action, reason = 'OPERATOR_ACTION') {
     return new Promise((resolve, reject) => {
-      const payload = JSON.stringify({
-        action,
+      const actUpper = String(action).toUpperCase();
+      const normalizedSignal = (actUpper === 'CUTOFF' || actUpper === 'STOP') ? 'STOP' : 'START';
+      const controlTopic = DEVICES.MQTT.TOPICS.CONTROL || 'conveyor/control';
+      const relayTopic = DEVICES.MQTT.TOPICS.CONTROL_RELAY || 'conveyor/control/relay';
+
+      const jsonPayload = JSON.stringify({
+        action: normalizedSignal,
         reason,
         timestamp: new Date().toISOString(),
       });
 
       if (!this.client || !this.isConnected) {
-        console.warn(`[MQTT] Cannot publish ${action} command: broker not connected. Updating local state.`);
-        return resolve({ published: false, queued: false, reason: 'BROKER_OFFLINE' });
+        console.warn(`[MQTT] Cannot publish ${normalizedSignal} command: broker not connected. Updating local state.`);
+        return resolve({
+          published: false,
+          queued: false,
+          reason: 'BROKER_OFFLINE',
+          signal: normalizedSignal,
+          topic: controlTopic,
+        });
       }
 
+      // 1. Publish plain string ("STOP" or "START") to primary conveyor/control topic
       this.client.publish(
-        DEVICES.MQTT.TOPICS.CONTROL_RELAY,
-        payload,
+        controlTopic,
+        normalizedSignal,
         { qos: 1 },
         (err) => {
           if (err) {
-            console.error(`[MQTT] Error publishing ${action}:`, err);
-            reject(err);
-          } else {
-            console.log(`[MQTT] Published ${action} to ${DEVICES.MQTT.TOPICS.CONTROL_RELAY}`);
-            resolve({ published: true, payload });
+            console.error(`[MQTT] Error publishing ${normalizedSignal} to ${controlTopic}:`, err);
+            return reject(err);
           }
+
+          console.log(`[MQTT] ✅ Published "${normalizedSignal}" to topic "${controlTopic}"`);
+
+          // 2. Also publish to relay topic if distinct, both as plain string & JSON for hardware compatibility
+          if (relayTopic && relayTopic !== controlTopic) {
+            this.client.publish(relayTopic, normalizedSignal, { qos: 1 });
+            this.client.publish(relayTopic, jsonPayload, { qos: 1 });
+          }
+
+          resolve({
+            published: true,
+            topic: controlTopic,
+            signal: normalizedSignal,
+            reason,
+          });
         }
       );
     });
+  }
+
+  /**
+   * Backward-compatible alias for publishControlCommand
+   */
+  publishRelayCommand(action, reason = 'OPERATOR_ACTION') {
+    return this.publishControlCommand(action, reason);
   }
 }
 
