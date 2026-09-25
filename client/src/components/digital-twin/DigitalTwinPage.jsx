@@ -273,7 +273,7 @@ export default function DigitalTwinPage({ onBack, telemetryData }) {
                 {[
                   { label: 'CURRENT', value: motorCurrent.toFixed(2), unit: 'A', warning: motorCurrent > 15, critical: motorCurrent > 20 },
                   { label: 'VIB / SHOCK', value: vibration.toFixed(2), unit: 'mm/s', warning: vibration > 5, critical: vibration > 7 },
-                  { label: 'TEMP AVG', value: avgTemp.toFixed(1), unit: '°C', warning: avgTemp > 65, critical: avgTemp > 80 },
+                  { label: 'TEMP', value: avgTemp.toFixed(1), unit: '°C', warning: avgTemp > 65, critical: avgTemp > 80 },
                   { label: 'ACOUSTIC', value: acoustic.toFixed(1), unit: 'dB', warning: acoustic > 75, critical: acoustic > 88 },
                   { label: 'MOTOR', value: motorRunning ? 'RUNNING' : 'STOPPED', unit: '', isStatus: true, running: motorRunning },
                   { label: 'LOAD', value: '80', unit: '%' },
@@ -303,94 +303,6 @@ export default function DigitalTwinPage({ onBack, telemetryData }) {
                   </div>
                 ))}
               </div>
-            </section>
-
-            {/* Joint status list */}
-            <section style={{ marginBottom: '20px' }}>
-              <div style={{
-                fontSize: '10px', fontWeight: 600, letterSpacing: '1.2px',
-                color: '#64748b', textTransform: 'uppercase', marginBottom: '10px',
-              }}>Joint Status</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {joints.map(joint => {
-                  const isSelected = selectedJoint === joint.id;
-                  const colors = STATE_COLORS[joint.state];
-                  return (
-                    <div
-                      key={joint.id}
-                      onClick={() => handleJointSelect(joint.id)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '7px 10px',
-                        borderRadius: '6px',
-                        background: isSelected ? 'rgba(51,65,85,0.4)' : 'rgba(30,41,59,0.45)',
-                        outline: isSelected ? '1px solid rgba(100,116,139,0.22)' : 'none',
-                        cursor: 'pointer',
-                        transition: 'background 0.2s',
-                      }}
-                    >
-                      <span style={{
-                        width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
-                        background: colors.dot,
-                        boxShadow: `0 0 ${joint.state === 'CRITICAL' ? '8px' : '4px'} ${colors.dot}`,
-                        animation: joint.state === 'CRITICAL' ? 'pulseDot 0.8s ease-in-out infinite' : 'none',
-                      }} />
-                      <span style={{ flex: 1, fontSize: '12px', fontWeight: 500, color: '#e2e8f0' }}>{joint.label}</span>
-                      <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", color: '#94a3b8' }}>
-                        {joint.riskPercent}%
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Selected joint detail */}
-              {selectedJointData && (
-                <div style={{
-                  marginTop: '10px',
-                  background: 'rgba(30,41,59,0.45)',
-                  borderRadius: '6px',
-                  padding: '10px 12px',
-                  border: '1px solid rgba(100,116,139,0.22)',
-                }}>
-                  <div style={{
-                    fontSize: '11px', fontWeight: 600, color: '#94a3b8',
-                    letterSpacing: '0.5px', marginBottom: '8px',
-                  }}>
-                    {selectedJointData.label} — Detail
-                  </div>
-                  {[
-                    { label: 'State', value: selectedJointData.state, isState: true },
-                    { label: 'Risk Score', value: `${selectedJointData.riskPercent}%` },
-                    { label: 'Temp', value: `${selectedJointData.temperature ? selectedJointData.temperature.toFixed(1) : '45.0'} °C` },
-                    { label: 'Vibration', value: `${selectedJointData.vibration ? selectedJointData.vibration.toFixed(2) : '1.50'} mm/s` },
-                    { label: 'Splice Gap', value: `${selectedJointData.gapWidth ? selectedJointData.gapWidth.toFixed(1) : '2.0'} mm` },
-                    { label: 'Surface Wear', value: `${selectedJointData.wearLevel ? selectedJointData.wearLevel.toFixed(0) : '15'}%` },
-                    { label: 'Belt Tension', value: `${selectedJointData.tension ? selectedJointData.tension.toFixed(0) : '95'}%` },
-                  ].map(row => (
-                    <div key={row.label} style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '4px 0', borderBottom: '1px solid rgba(100,116,139,0.08)',
-                    }}>
-                      <span style={{ fontSize: '11px', color: '#64748b' }}>{row.label}</span>
-                      {row.isState ? (
-                        <span style={{
-                          fontSize: '11px', fontWeight: 600, fontFamily: "'JetBrains Mono', monospace",
-                          padding: '2px 8px', borderRadius: '3px',
-                          color: STATE_COLORS[selectedJointData.state].dot,
-                          background: STATE_COLORS[selectedJointData.state].dim,
-                        }}>{selectedJointData.state}</span>
-                      ) : (
-                        <span style={{ fontSize: '12px', fontWeight: 500, fontFamily: "'JetBrains Mono', monospace", color: '#e2e8f0' }}>
-                          {row.value}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
             </section>
 
             {/* Digital Twin Sync Status */}

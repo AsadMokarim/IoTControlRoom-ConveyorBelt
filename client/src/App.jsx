@@ -176,7 +176,7 @@ function App() {
                 Overview
               </a>
               <a href="#" onClick={handleOpenCameras}>
-                📷 ESP32 Cameras
+                ESP32 Cameras
               </a>
               <a href="#" onClick={handleOpenTwin}>
                 Digital Twin
@@ -323,7 +323,7 @@ function App() {
               }}
             >
               <TemperatureGauge title="Average Temperature" icon="🌡" value={avgTemp} id="average-temperature" />
-              <TemperatureGauge title="Maximum Temperature" icon="🔥" value={maxTemp} id="maximum-temperature" />
+              {/* <TemperatureGauge title="Maximum Temperature" icon="🔥" value={maxTemp} id="maximum-temperature" /> */}
               <CurrentMeter value={motorCurrent} />
               <VibrationMeter value={vibration} />
               <AcousticMeter value={acoustic} />
@@ -340,8 +340,17 @@ function App() {
                   <VibrationChart value={vibration} />
                 </div>
               </div>
+              <div className="panel chart-panel">
+                <div className="panel-header">
+                  <h2>Current Telemetry</h2>
+                  <span className="live-indicator">● {isLive ? 'LIVE MQTT' : 'SIMULATION'}</span>
+                </div>
+                <div className="chart-wrapper">
+                  <VibrationChart value={motorCurrent} />
+                </div>
+              </div>
 
-              <div className="panel digital-twin-panel">
+              {/* <div className="panel digital-twin-panel">
                 <div className="panel-header">
                   <h2>Digital Twin Status</h2>
                   <span id="twin-status">
@@ -357,9 +366,9 @@ function App() {
                   </span>
                 </div>
                 <DigitalTwinStatus components={jointComponents} />
-              </div>
+              </div> */}
 
-              <div className="panel degradation-panel">
+              {/* <div className="panel degradation-panel">
                 <div className="panel-header">
                   <div>
                     <h2>Degradation Progression</h2>
@@ -368,15 +377,15 @@ function App() {
                   <span className="stage-status">STAGE {failureStage}</span>
                 </div>
                 <DegradationTimeline activeStage={failureStage} />
-              </div>
+              </div> */}
 
-              <div className="panel thermal-panel">
+              {/* <div className="panel thermal-panel">
                 <div className="panel-header">
                   <h2>Thermal Map</h2>
                   <span>{isLive ? 'Sensors online' : 'Live simulation'}</span>
                 </div>
                 <ThermalMap zones={thermalZones} />
-              </div>
+              </div> */}
             </section>
 
             {alertActive && (
