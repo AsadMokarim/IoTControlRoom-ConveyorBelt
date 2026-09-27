@@ -12,14 +12,6 @@ const Sidebar = ({ isLight, onToggleTheme }) => {
           <span className="nav-icon">📊</span>
           Overview
         </a>
-        <a href="#thermal" className="nav-item">
-          <span className="nav-icon">🌡️</span>
-          Thermal Map
-        </a>
-        <a href="#vibration" className="nav-item">
-          <span className="nav-icon">〰️</span>
-          Vibration
-        </a>
         <a href="#digital-twin" className="nav-item">
           <span className="nav-icon">🤖</span>
           Digital Twin
@@ -27,11 +19,6 @@ const Sidebar = ({ isLight, onToggleTheme }) => {
         <a href="#sensors" className="nav-item">
           <span className="nav-icon">🎛️</span>
           Sensors
-        </a>
-        <a href="#alerts" className="nav-item">
-          <span className="nav-icon">⚠️</span>
-          Alerts
-          <span className="badge">3</span>
         </a>
       </nav>
       <div className="sidebar-footer">

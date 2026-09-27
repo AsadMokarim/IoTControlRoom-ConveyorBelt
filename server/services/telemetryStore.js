@@ -201,14 +201,28 @@ class TelemetryStore {
 
   getLatest() {
     const isLive = this._latest !== null && (Date.now() - this._lastPushAt) < LIVE_TIMEOUT_MS;
+    const isTripped = this._relay.state === 'TRIPPED' || this._relay.trip_triggered;
 
     if (isLive) {
-      return { ...this._latest, is_live: true, relay: { ...this._relay } };
+      const res = { ...this._latest, is_live: true, relay: { ...this._relay } };
+      if (isTripped) {
+        res.system_status = 'critical';
+        if (res.kpis) {
+          res.kpis.motor_current = 0.0;
+          res.kpis.active_alerts = Math.max(1, res.kpis.active_alerts || 0);
+        }
+      }
+      return res;
     }
 
     const mock = generateMockTelemetry();
     // Include acoustic_db and relay in mock payload as well
     mock.kpis.acoustic_db = randomFloat(62.0, 74.5);
+    if (isTripped) {
+      mock.system_status = 'critical';
+      mock.kpis.motor_current = 0.0;
+      mock.kpis.active_alerts = Math.max(1, mock.kpis.active_alerts || 0);
+    }
     return {
       ...mock,
       is_live: false,

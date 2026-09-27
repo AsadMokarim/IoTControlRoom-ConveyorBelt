@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import HealthScore from './components/dashboard/HealthScore';
 import TemperatureGauge from './components/dashboard/TemperatureGauge';
 import VibrationMeter from './components/dashboard/VibrationMeter';
@@ -34,6 +34,7 @@ function App() {
   const twinRef = useRef();
   const [failureStage, setFailureStage] = useState(0);
   const [alertActive, setAlertActive] = useState(false);
+  const [manualEmergencyStop, setManualEmergencyStop] = useState(false);
   const [currentView, setCurrentView] = useState('dashboard');
   const [hasVisitedTwin, setHasVisitedTwin] = useState(false);
   const [hasVisitedCameras, setHasVisitedCameras] = useState(false);
@@ -75,9 +76,11 @@ function App() {
   };
 
   const handleCutoff = async (reason) => {
+    setManualEmergencyStop(true);
     try {
       await triggerCutoff(reason);
     } catch (err) {
+      setManualEmergencyStop(false);
       alert(`Cutoff failed: ${err.message}`);
     }
   };
@@ -85,6 +88,7 @@ function App() {
   const handleReset = async () => {
     try {
       await triggerReset();
+      setManualEmergencyStop(false);
       setFailureStage(0);
       setAlertActive(false);
     } catch (err) {
@@ -92,9 +96,18 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    if (relayState?.state === 'TRIPPED' || relayState?.trip_triggered) {
+      setManualEmergencyStop(true);
+    } else if (relayState?.state === 'CLOSED') {
+      setManualEmergencyStop(false);
+    }
+  }, [relayState?.state, relayState?.trip_triggered]);
+
   const timestamp = data?.timestamp || 'Waiting for data...';
   const baseStatus = data?.system_status || 'normal';
-  const isTripped = relayState?.state === 'TRIPPED' || relayState?.trip_triggered;
+  const isTripped = relayState?.state === 'TRIPPED' || relayState?.trip_triggered || manualEmergencyStop;
+  const isTwinPaused = isTripped || failureStage === 3;
   const systemStatus = isTripped || failureStage === 3 ? 'critical' : failureStage >= 1 ? 'warning' : baseStatus;
 
   const rawAvgTemp = data?.kpis?.average_temperature !== undefined ? Number(data.kpis.average_temperature) : 45;
@@ -148,7 +161,22 @@ function App() {
       {/* Digital Twin page */}
       {hasVisitedTwin && (
         <div style={{ display: currentView === 'digital-twin' ? 'block' : 'none' }}>
-          <DigitalTwinPage onBack={handleBackToDashboard} telemetryData={data} />
+          <DigitalTwinPage
+            onBack={handleBackToDashboard}
+            telemetryData={data}
+            relayState={{
+              ...relayState,
+              state: isTripped ? 'TRIPPED' : relayState?.state,
+              trip_triggered: isTripped ? true : relayState?.trip_triggered,
+            }}
+            isPaused={isTwinPaused}
+            onCutoff={handleCutoff}
+            onReset={handleReset}
+            isPending={isPending}
+            isLight={isLight}
+            toggleTheme={toggleTheme}
+            onNavigate={(view) => setCurrentView(view)}
+          />
         </div>
       )}
 
@@ -163,7 +191,7 @@ function App() {
       <div style={{ display: currentView === 'dashboard' ? 'block' : 'none' }}>
         <div className="app-shell">
           <aside className="sidebar">
-            <h2>Control Room</h2>
+            <h2>ConveyorGuard</h2>
             <nav>
               <a
                 className={currentView === 'dashboard' ? 'active' : ''}
@@ -181,9 +209,6 @@ function App() {
               <a href="#" onClick={handleOpenTwin}>
                 Digital Twin
               </a>
-              <a href="#">Thermal Map</a>
-              <a href="#">Vibration</a>
-              <a href="#">Alerts</a>
               <button
                 id="theme-toggle"
                 className="theme-toggle-btn"
@@ -191,7 +216,7 @@ function App() {
                 onClick={toggleTheme}
               >
                 <span className="icon">🌓</span>
-                <span className="text">{isLight ? 'Switch to Dark' : 'Switch to Light'}</span>
+                <span className="text">{isLight ? 'THEME: LIGHT' : 'THEME: DARK'}</span>
               </button>
             </nav>
           </aside>
@@ -214,7 +239,11 @@ function App() {
 
             {/* Hardware Motor Control & Auto-Cutoff Panel */}
             <EmergencyStopPanel
-              relayState={relayState}
+              relayState={{
+                ...relayState,
+                state: isTripped ? 'TRIPPED' : relayState?.state,
+                trip_triggered: isTripped ? true : relayState?.trip_triggered,
+              }}
               onCutoff={handleCutoff}
               onReset={handleReset}
               isPending={isPending}
@@ -230,19 +259,55 @@ function App() {
                   <div className="panel thermal-panel" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <div className="panel-header">
                       <h2>Digital Twin Preview</h2>
-                      <span>{isLive ? 'Real hardware telemetry' : 'Simulation mode'}</span>
+                      <span style={{ color: isTwinPaused ? 'var(--error, #ffb4ab)' : 'inherit', fontWeight: isTwinPaused ? 600 : 'normal' }}>
+                        {isTwinPaused ? '⏸️ PAUSED (E-STOP)' : isLive ? 'Hardware MQTT stream' : 'Simulation active'}
+                      </span>
                     </div>
                     <div
                       className="twin-container"
                       style={{
                         width: '100%',
                         height: '300px',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--rounded, 0.25rem)',
                         overflow: 'hidden',
                         position: 'relative',
+                        border: '1px solid var(--outline-variant, #3c4a42)',
+                        background: 'var(--surface-container-lowest, #0a0f14)',
                       }}
                     >
-                      <DigitalTwinCanvas ref={twinRef} simulateFailure={failureStage} telemetryData={data} />
+                      <DigitalTwinCanvas
+                        ref={twinRef}
+                        simulateFailure={failureStage}
+                        telemetryData={data}
+                        isPaused={isTwinPaused}
+                        isLight={isLight}
+                      />
+                      {isTwinPaused && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '10px',
+                            left: '10px',
+                            background: 'rgba(147, 0, 10, 0.88)',
+                            color: '#ffb4ab',
+                            border: '1px solid #ffb4ab',
+                            borderRadius: 'var(--rounded-sm, 0.125rem)',
+                            padding: '4px 10px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            letterSpacing: '0.5px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            zIndex: 10,
+                            backdropFilter: 'blur(4px)',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                          }}
+                        >
+                          <span style={{ fontSize: '13px' }}>⏸️</span>
+                          <span>DIGITAL TWIN PAUSED (EMERGENCY STOP)</span>
+                        </div>
+                      )}
                       <div id="twin-telemetry-overlay" className="twin-telemetry-overlay">
                         <div className="telemetry-line">
                           Temp: <span id="twin-val-temp">{avgTemp.toFixed(1)}°C</span>
@@ -272,18 +337,19 @@ function App() {
                           left: '10px',
                           right: '10px',
                           display: 'flex',
-                          gap: '10px',
+                          gap: '8px',
                           zIndex: 10,
                         }}
                       >
                         <button
                           onClick={handleResetCamera}
+                          className="alarm-annunciator"
                           style={{
-                            background: 'rgba(0,0,0,0.6)',
-                            color: '#fff',
-                            border: 'none',
+                            background: 'var(--surface-container-high, #252a31)',
+                            color: 'var(--on-surface, #dee3eb)',
+                            border: '1px solid var(--outline-variant, #3c4a42)',
                             padding: '6px 12px',
-                            borderRadius: '4px',
+                            borderRadius: 'var(--rounded-sm, 0.125rem)',
                             cursor: 'pointer',
                           }}
                         >
@@ -291,13 +357,29 @@ function App() {
                         </button>
                         <button
                           onClick={handleToggleFailure}
+                          className="alarm-annunciator"
                           style={{
                             background:
-                              failureStage === 3 ? '#ef4444' : failureStage > 0 ? '#f59e0b' : 'rgba(0,0,0,0.6)',
-                            color: '#fff',
-                            border: 'none',
+                              failureStage === 3
+                                ? 'var(--error-container, #93000a)'
+                                : failureStage > 0
+                                ? 'var(--tertiary-container, #e29100)'
+                                : 'var(--surface-container-high, #252a31)',
+                            color:
+                              failureStage === 3
+                                ? 'var(--error, #ffb4ab)'
+                                : failureStage > 0
+                                ? 'var(--tertiary-fixed, #ffddb8)'
+                                : 'var(--on-surface, #dee3eb)',
+                            border: `1px solid ${
+                              failureStage === 3
+                                ? 'var(--error, #ffb4ab)'
+                                : failureStage > 0
+                                ? 'var(--tertiary, #ffb95f)'
+                                : 'var(--outline-variant, #3c4a42)'
+                            }`,
                             padding: '6px 12px',
-                            borderRadius: '4px',
+                            borderRadius: 'var(--rounded-sm, 0.125rem)',
                             cursor: 'pointer',
                           }}
                         >
@@ -322,7 +404,7 @@ function App() {
                 gap: '16px',
               }}
             >
-              <TemperatureGauge title="Average Temperature" icon="🌡" value={avgTemp} id="average-temperature" />
+              <TemperatureGauge title="Temperature" icon=" " value={avgTemp} id="average-temperature" />
               {/* <TemperatureGauge title="Maximum Temperature" icon="🔥" value={maxTemp} id="maximum-temperature" /> */}
               <CurrentMeter value={motorCurrent} />
               <VibrationMeter value={vibration} />
@@ -337,7 +419,7 @@ function App() {
                   <span className="live-indicator">● {isLive ? 'LIVE MQTT' : 'SIMULATION'}</span>
                 </div>
                 <div className="chart-wrapper">
-                  <VibrationChart value={vibration} />
+                  <VibrationChart value={vibration} color="#4edea3" label="Vibration (g)" />
                 </div>
               </div>
               <div className="panel chart-panel">
@@ -346,7 +428,7 @@ function App() {
                   <span className="live-indicator">● {isLive ? 'LIVE MQTT' : 'SIMULATION'}</span>
                 </div>
                 <div className="chart-wrapper">
-                  <VibrationChart value={motorCurrent} />
+                  <VibrationChart value={motorCurrent} color="#adc6ff" label="Current (A)" />
                 </div>
               </div>
 
@@ -392,9 +474,7 @@ function App() {
               <TwinAlertOverlay
                 isActive={alertActive}
                 alertData={{
-                  jointName: 'Joint 3 (Splice C)',
-                  riskPercent: 96,
-                  reason: 'Autonomous Cutoff Triggered',
+                  reason: 'Autonomous Cutoff Triggered — Emergency Relay Open',
                 }}
                 onDismiss={() => {
                   if (appSimTimerRef.current) {

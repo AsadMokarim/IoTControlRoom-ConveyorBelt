@@ -8,18 +8,18 @@ export const calculateHealthScore = (avgTemp = 0, maxTemp = 0, vibration = 0, al
   
   score = Math.round(Math.max(0, Math.min(100, score)));
   
-  let label = 'Excellent condition';
-  let primaryColor = '#10b981';
-  let secondaryColor = '#047857';
+  let label = 'OPERATIONAL (OPTIMAL)';
+  let primaryColor = '#4edea3';
+  let secondaryColor = '#10b981';
   
   if (score < 60) {
-    label = 'Critical condition';
-    primaryColor = '#ef4444';
-    secondaryColor = '#b91c1c';
+    label = 'CRITICAL / INTERLOCK';
+    primaryColor = '#ffb4ab';
+    secondaryColor = '#93000a';
   } else if (score < 80) {
-    label = 'Requires attention';
-    primaryColor = '#f59e0b';
-    secondaryColor = '#b45309';
+    label = 'DEGRADED / ATTENTION';
+    primaryColor = '#ffb95f';
+    secondaryColor = '#e29100';
   }
   
   return { score, label, primaryColor, secondaryColor };

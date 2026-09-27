@@ -12,7 +12,9 @@ const DigitalTwinCanvas = forwardRef(({
   onJointSelect,
   onSensorSelect,
   simulateFailure,
-  resetSimulation
+  resetSimulation,
+  isPaused = false,
+  isLight = false,
 }, ref) => {
   const containerRef = useRef(null);
   const sceneRefs = useRef({});
@@ -27,28 +29,56 @@ const DigitalTwinCanvas = forwardRef(({
       const state = sceneRefs.current;
       if (!state || !state.scene) return;
       state.isWhiteBg = !state.isWhiteBg;
-      const newColor = state.isWhiteBg ? 0xffffff : 0x000000;
-      state.scene.background.setHex(newColor);
+      const isWhite = state.isWhiteBg;
+      const bgHex = isWhite ? 0xedf1f7 : 0x0a0f14;
+      const groundHex = isWhite ? 0x1b2026 : 0xffffff;
+      const grid1 = isWhite ? 0x475569 : 0x64748b;
+      const grid2 = isWhite ? 0x2e3846 : 0x94a3b8;
+      state.scene.background.setHex(bgHex);
       if (state.scene.fog) {
-        state.scene.fog.color.setHex(newColor);
+        state.scene.fog.color.setHex(bgHex);
       }
       if (state.ground && state.ground.material) {
-        state.ground.material.color.setHex(state.isWhiteBg ? 0xf4f4f4 : 0x0d1117);
+        state.ground.material.color.setHex(groundHex);
       }
       if (state.gridHelper) {
         state.scene.remove(state.gridHelper);
         state.gridHelper.geometry.dispose();
         state.gridHelper.material.dispose();
       }
-      state.gridHelper = new THREE.GridHelper(
-        60, 60, 
-        state.isWhiteBg ? 0xcccccc : 0x1a2332, 
-        state.isWhiteBg ? 0xdddddd : 0x141c28
-      );
+      state.gridHelper = new THREE.GridHelper(60, 60, grid1, grid2);
       state.gridHelper.position.y = 0.005;
       state.scene.add(state.gridHelper);
     }
   }));
+
+  // Sync 3D canvas environment whenever isLight changes
+  // Default (isLight=false, black theme): background is black, base/tiles are white
+  // White theme (isLight=true): background is white, base/tiles are dark
+  useEffect(() => {
+    const state = sceneRefs.current;
+    if (!state || !state.scene) return;
+    state.isWhiteBg = Boolean(isLight);
+    const bgHex = isLight ? 0xedf1f7 : 0x0a0f14;
+    const groundHex = isLight ? 0x1b2026 : 0xffffff;
+    const grid1 = isLight ? 0x475569 : 0x64748b;
+    const grid2 = isLight ? 0x2e3846 : 0x94a3b8;
+    state.scene.background.setHex(bgHex);
+    if (state.scene.fog) {
+      state.scene.fog.color.setHex(bgHex);
+    }
+    if (state.ground && state.ground.material) {
+      state.ground.material.color.setHex(groundHex);
+    }
+    if (state.gridHelper) {
+      state.scene.remove(state.gridHelper);
+      state.gridHelper.geometry.dispose();
+      state.gridHelper.material.dispose();
+    }
+    state.gridHelper = new THREE.GridHelper(60, 60, grid1, grid2);
+    state.gridHelper.position.y = 0.005;
+    state.scene.add(state.gridHelper);
+  }, [isLight]);
 
   const callbacksRef = useRef({ onJointSelect, onSensorSelect });
   useEffect(() => {
@@ -85,6 +115,11 @@ const DigitalTwinCanvas = forwardRef(({
     scene.add(conveyorResult.conveyorGroup);
     
     const motorResult = createMotor();
+    const initSimStage = typeof simulateFailure === 'number' ? simulateFailure : (simulateFailure ? 3 : 0);
+    const initIsRelayTripped = telemetryData?.relay?.state === 'TRIPPED' || telemetryData?.relay?.trip_triggered;
+    const initIsCritical = telemetryData?.system_status === 'critical';
+    const initIsStopped = Boolean(isPaused || initIsRelayTripped || telemetryData?.emergencyStop || initSimStage === 3 || initIsCritical);
+    motorResult.motorState.running = !initIsStopped;
     scene.add(motorResult.motorGroup);
     
     const jointsResult = createJoints();
@@ -224,15 +259,19 @@ const DigitalTwinCanvas = forwardRef(({
 
   // Sync telemetry data to 3D scene
   useEffect(() => {
-    if (!telemetryData || !sceneRefs.current) return;
+    if (!sceneRefs.current || !sceneRefs.current.motorResult) return;
     const { motorResult, jointsResult, sensorsResult } = sceneRefs.current;
     
     const simStage = typeof simulateFailure === 'number' ? simulateFailure : (simulateFailure ? 3 : 0);
-    const isCritical = telemetryData.system_status === 'critical';
+    const isRelayTripped = telemetryData?.relay?.state === 'TRIPPED' || telemetryData?.relay?.trip_triggered;
+    const isCritical = telemetryData?.system_status === 'critical';
+    const isStopped = Boolean(isPaused || isRelayTripped || telemetryData?.emergencyStop || simStage === 3 || isCritical);
 
-    if (motorResult) {
-      motorResult.motorState.running = simStage !== 3 && !isCritical;
+    if (motorResult && motorResult.motorState) {
+      motorResult.motorState.running = !isStopped;
     }
+
+    if (!telemetryData) return;
 
     if (jointsResult) {
       const telemetryJoints = telemetryData.joints;
@@ -270,7 +309,7 @@ const DigitalTwinCanvas = forwardRef(({
       const sensorMap = {
         vibration: telemetryData.vibration.rms,
         temperature: telemetryData.kpis.average_temperature,
-        motorCurrent: 1.32,
+        motorCurrent: isStopped ? 0.0 : (telemetryData.kpis.motor_current || 1.32),
         camera: 0,
       };
       for (const s of sensorsResult.sensorObjects) {
@@ -279,7 +318,7 @@ const DigitalTwinCanvas = forwardRef(({
         }
       }
     }
-  }, [telemetryData, simulateFailure]);
+  }, [telemetryData, simulateFailure, isPaused]);
 
   return (
     <div

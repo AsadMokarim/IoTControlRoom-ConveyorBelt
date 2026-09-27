@@ -5,31 +5,33 @@ const TemperatureGauge = ({ title, icon, value, id }) => {
   const percentage = clamp(value, 0, 100) / 100;
   const degrees = `${percentage * 270}deg`;
   
-  let color = "#38bdf8";
-  if (value >= 85) color = "#ef4444";
-  else if (value >= 70) color = "#facc15";
+  let color = "var(--primary, #4edea3)";
+  if (value >= 80) color = "var(--error, #ffb4ab)";
+  else if (value >= 65) color = "var(--tertiary, #ffb95f)";
 
   return (
     <div className="widget gauge-widget">
-        <div className="widget-title">
-            <span>{title}</span>
-            <span className="widget-icon">{icon}</span>
-        </div>
+      <div className="widget-title">
+        <span className="label-caps">{title}</span>
+        <span className="widget-icon">{icon}</span>
+      </div>
 
-        <div className="gauge"
-             id={`${id}-gauge`}
-             style={{ "--value": degrees, "--gauge-color": color }}>
-            <div className="gauge-inner">
-                <strong id={id}>{value ? value.toFixed(1) : '--'}</strong>
-                <small>°C</small>
-            </div>
+      <div
+        className="gauge"
+        id={`${id}-gauge`}
+        style={{ "--value": degrees, "--gauge-color": color }}
+      >
+        <div className="gauge-inner">
+          <strong id={id} className="display-process-val">{value ? value.toFixed(1) : '--'}</strong>
+          <small className="subhead-tag">°C</small>
         </div>
+      </div>
 
-        <div className="scale">
-            <span>0</span>
-            <span>50</span>
-            <span>100</span>
-        </div>
+      <div className="scale telemetry-data">
+        <span>0°C</span>
+        <span>50°C</span>
+        <span>100°C</span>
+      </div>
     </div>
   );
 };

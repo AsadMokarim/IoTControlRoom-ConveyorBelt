@@ -15,10 +15,18 @@ const BG_COLOR = 0x0a0e17;
  * @returns {{ scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer }}
  */
 export function createScene(canvasContainer) {
+  const isLightMode = typeof document !== 'undefined' && document.body.classList.contains('light-mode');
+  // Default (black theme): background is black, base/tiles are white
+  // White theme: background is white, base/tiles are black/dark
+  const bgHex = isLightMode ? 0xedf1f7 : 0x0a0f14;
+  const groundHex = isLightMode ? 0x1b2026 : 0xffffff;
+  const grid1 = isLightMode ? 0x475569 : 0x64748b;
+  const grid2 = isLightMode ? 0x2e3846 : 0x94a3b8;
+
   // --- Scene ---
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(BG_COLOR);
-  scene.fog = new THREE.Fog(BG_COLOR, 25, 60);
+  scene.background = new THREE.Color(bgHex);
+  scene.fog = new THREE.Fog(bgHex, 25, 60);
 
   // --- Camera ---
   const aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
@@ -71,7 +79,7 @@ export function createScene(canvasContainer) {
   // --- Ground Plane ---
   const groundGeo = new THREE.PlaneGeometry(60, 60);
   const groundMat = new THREE.MeshStandardMaterial({
-    color: 0xf4f4f4,
+    color: groundHex,
     roughness: 0.9,
     metalness: 0.1,
   });
@@ -82,7 +90,7 @@ export function createScene(canvasContainer) {
   scene.add(ground);
 
   // Subtle grid overlay
-  const gridHelper = new THREE.GridHelper(60, 60, 0xcccccc, 0xdddddd);
+  const gridHelper = new THREE.GridHelper(60, 60, grid1, grid2);
   gridHelper.position.y = 0.005;
   scene.add(gridHelper);
 

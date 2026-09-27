@@ -18,65 +18,61 @@ const EmergencyStopPanel = ({ relayState, onCutoff, onReset, isPending }) => {
 
   return (
     <div
-      className="panel"
+      className="panel scada-mcc-panel"
       style={{
-        border: isTripped ? '1px solid #ef4444' : '1px solid var(--panel-border, rgba(148, 163, 184, 0.2))',
-        background: isTripped
-          ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(30, 41, 59, 0.95) 100%)'
-          : 'var(--panel, #1e293b)',
-        padding: '16px 20px',
-        borderRadius: '8px',
-        marginBottom: '20px',
-        transition: 'all 0.3s ease',
+        border: isTripped ? '1px solid var(--error, #ffb4ab)' : '1px solid var(--outline-variant, #3c4a42)',
+        background: isTripped ? 'var(--surface-container-high, #252a31)' : 'var(--surface-container, #1b2026)',
+        padding: '12px 16px',
+        borderRadius: 'var(--rounded, 0.25rem)',
+        marginBottom: '16px',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '1.25rem' }}>⚡</span>
-            <h2 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 700, color: 'var(--text, #e2e8f0)' }}>
-              Hardware Motor Control & Safety Relay
+            <h2 className="headline-panel" style={{ margin: 0, color: 'var(--on-surface)' }}>
+              Hardware Motor Safety Breaker & Relay
             </h2>
             <span
+              className="alarm-annunciator"
               style={{
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                padding: '2px 8px',
-                borderRadius: '4px',
-                background: isTripped ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)',
-                color: isTripped ? '#ef4444' : '#22c55e',
+                padding: '3px 8px',
+                borderRadius: 'var(--rounded-sm, 0.125rem)',
+                background: isTripped ? 'var(--on-error, #690005)' : 'var(--on-primary, #003824)',
+                color: isTripped ? 'var(--error, #ffb4ab)' : 'var(--primary, #4edea3)',
+                border: `1px solid ${isTripped ? 'var(--error-container, #93000a)' : 'var(--primary-container, #10b981)'}`,
               }}
             >
-              {isTripped ? 'MOTOR STOPPED (RELAY OPEN)' : 'MOTOR RUNNING (RELAY CLOSED)'}
+              {isTripped ? 'RELAY TRIPPED / MOTOR HALTED' : 'MOTOR ACTIVE'}
             </span>
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--muted, #94a3b8)' }}>
+          {/* <p className="body-dense" style={{ margin: '4px 0 0', color: 'var(--on-surface-variant)' }}>
             {isTripped
-              ? `Safety stop active: ${relayState?.trip_reason || 'Manual stop'}${relayState?.tripped_at ? ` at ${relayState.tripped_at}` : ''} | MQTT topic: conveyor/control`
-              : 'Direct MQTT safety control via conveyor/control. Publishes "STOP" to trip circuit and "START" to resume.'}
-          </p>
+              ? `Trip condition active: ${relayState?.trip_reason || 'Manual Emergency Stop'}${relayState?.tripped_at ? ` at ${relayState.tripped_at}` : ''} | MQTT topic: conveyor/control`
+              : 'Direct safety relay contact via MQTT conveyor/control topic. Publishes "STOP" to trip circuit breaker and "START" to clear interlock.'}
+          </p> */}
         </div>
 
         {/* Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           {!isTripped && (
             <select
               value={selectedReason}
               onChange={(e) => setSelectedReason(e.target.value)}
+              className="telemetry-data"
               style={{
-                padding: '8px 12px',
-                borderRadius: '6px',
-                background: 'rgba(15, 23, 42, 0.7)',
-                color: 'var(--text, #e2e8f0)',
-                border: '1px solid var(--border, #334155)',
-                fontSize: '0.8rem',
+                padding: '7px 10px',
+                borderRadius: 'var(--rounded-sm, 0.125rem)',
+                background: 'var(--surface-container-high, #252a31)',
+                color: 'var(--on-surface, #dee3eb)',
+                border: '1px solid var(--outline-variant, #3c4a42)',
                 cursor: 'pointer',
               }}
             >
-              <option value="EMERGENCY_STOP">Reason: Manual E-Stop</option>
-              <option value="CONVEYOR_JAM">Reason: Belt Jam Detected</option>
-              <option value="THERMAL_OVERHEAT">Reason: Motor Overheating</option>
-              <option value="MAINTENANCE_HOLD">Reason: Scheduled Hold</option>
+              <option value="EMERGENCY_STOP">Reason: Manual Operator E-Stop</option>
+              <option value="CONVEYOR_JAM">Reason: Mechanical Belt Jam</option>
+              <option value="THERMAL_OVERHEAT">Reason: Bearing/Motor Overheat</option>
+              <option value="MAINTENANCE_HOLD">Reason: Inspection Lockout</option>
             </select>
           )}
 
@@ -85,25 +81,21 @@ const EmergencyStopPanel = ({ relayState, onCutoff, onReset, isPending }) => {
             onClick={handleCutoffClick}
             disabled={isPending || isTripped}
             title='Publishes "STOP" to conveyor/control'
+            className="alarm-annunciator"
             style={{
-              padding: '10px 20px',
-              borderRadius: '6px',
-              background: isTripped ? 'rgba(100, 116, 139, 0.3)' : '#dc2626',
-              color: '#ffffff',
-              border: isTripped ? '1px solid #475569' : '1px solid #ef4444',
-              fontWeight: 800,
-              fontSize: '0.88rem',
-              letterSpacing: '0.04em',
+              padding: '8px 16px',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
+              background: isTripped ? 'var(--surface-container-highest, #30353c)' : 'var(--error-container, #93000a)',
+              color: isTripped ? 'var(--outline, #86948a)' : 'var(--error, #ffb4ab)',
+              border: `1px solid ${isTripped ? 'var(--outline-variant, #3c4a42)' : 'var(--error, #ffb4ab)'}`,
               cursor: isTripped || isPending ? 'not-allowed' : 'pointer',
-              boxShadow: isTripped ? 'none' : '0 0 14px rgba(239, 68, 68, 0.4)',
-              transition: 'all 0.2s',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
+              transition: 'all 0.15s ease',
             }}
           >
-            <span>🛑</span>
-            {isPending ? 'TRANSMITTING...' : 'EMERGENCY STOP (STOP)'}
+            <span>{isPending ? 'TRANSMITTING...' : 'EMERGENCY TRIP (STOP)'}</span>
           </button>
 
           {/* Reset & Start Button */}
@@ -111,24 +103,21 @@ const EmergencyStopPanel = ({ relayState, onCutoff, onReset, isPending }) => {
             onClick={handleResetClick}
             disabled={isPending || !isTripped}
             title='Publishes "START" to conveyor/control'
+            className="alarm-annunciator"
             style={{
-              padding: '10px 18px',
-              borderRadius: '6px',
-              background: isTripped ? '#16a34a' : 'rgba(100, 116, 139, 0.2)',
-              color: isTripped ? '#ffffff' : 'rgba(148, 163, 184, 0.5)',
-              border: isTripped ? '1px solid #22c55e' : '1px solid #334155',
-              fontWeight: 700,
-              fontSize: '0.85rem',
+              padding: '8px 16px',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
+              background: isTripped ? 'var(--on-primary, #003824)' : 'var(--surface-container-highest, #30353c)',
+              color: isTripped ? 'var(--primary, #4edea3)' : 'var(--outline, #86948a)',
+              border: `1px solid ${isTripped ? 'var(--primary-container, #10b981)' : 'var(--outline-variant, #3c4a42)'}`,
               cursor: !isTripped || isPending ? 'not-allowed' : 'pointer',
-              boxShadow: isTripped ? '0 0 12px rgba(34, 197, 94, 0.35)' : 'none',
-              transition: 'all 0.2s',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
+              transition: 'all 0.15s ease',
             }}
           >
-            <span>🔄</span>
-            RESET TO START (START)
+            <span>CLEAR INTERLOCK (START)</span>
           </button>
         </div>
       </div>

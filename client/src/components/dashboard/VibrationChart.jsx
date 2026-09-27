@@ -21,7 +21,7 @@ ChartJS.register(
   Filler
 );
 
-const VibrationChart = ({ value }) => {
+const VibrationChart = ({ value, color = '#4edea3', label = 'Telemetry' }) => {
   const labelsRef = useRef(Array.from({ length: 20 }, (_, i) => ''));
   const valuesRef = useRef(Array.from({ length: 20 }, () => 0));
   const [chartData, setChartData] = useState(null);
@@ -40,19 +40,19 @@ const VibrationChart = ({ value }) => {
         labels: [...labelsRef.current],
         datasets: [
           {
-            label: 'Vibration',
+            label,
             data: [...valuesRef.current],
-            borderColor: '#38bdf8',
-            backgroundColor: 'rgba(56, 189, 248, 0.1)',
-            borderWidth: 2,
+            borderColor: color,
+            backgroundColor: color === '#4edea3' ? 'rgba(78, 222, 163, 0.08)' : 'rgba(173, 198, 255, 0.08)',
+            borderWidth: 1.5,
             pointRadius: 0,
             fill: true,
-            tension: 0.35
+            tension: 0.2
           }
         ]
       });
     }
-  }, [value]);
+  }, [value, color, label]);
 
   const options = {
     responsive: true,
@@ -60,6 +60,14 @@ const VibrationChart = ({ value }) => {
     plugins: {
       legend: {
         display: false
+      },
+      tooltip: {
+        titleFont: { family: 'JetBrains Mono', size: 11 },
+        bodyFont: { family: 'JetBrains Mono', size: 11 },
+        backgroundColor: '#1b2026',
+        borderColor: '#3c4a42',
+        borderWidth: 1,
+        displayColors: false
       }
     },
     scales: {
@@ -69,7 +77,11 @@ const VibrationChart = ({ value }) => {
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(255, 255, 255, 0.05)'
+          color: 'rgba(60, 74, 66, 0.35)'
+        },
+        ticks: {
+          color: '#86948a',
+          font: { family: 'JetBrains Mono', size: 10 }
         }
       }
     },
@@ -79,7 +91,7 @@ const VibrationChart = ({ value }) => {
   };
 
   return (
-    <div className="vibration-chart-container" style={{ height: '200px' }}>
+    <div className="vibration-chart-container" style={{ height: '100%' }}>
       {chartData && <Line data={chartData} options={options} />}
     </div>
   );

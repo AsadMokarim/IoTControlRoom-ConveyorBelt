@@ -8,45 +8,46 @@ const CameraPage = ({ onBack, telemetryData }) => {
   const isLive = Boolean(telemetryData?.is_live);
 
   return (
-    <div className="app-shell" style={{ minHeight: '100vh', background: 'var(--background, #0f172a)' }}>
-      <main className="main-content" style={{ width: '100%', maxWidth: '1440px', margin: '0 auto', padding: '24px' }}>
+    <div className="app-shell" style={{ minHeight: '100vh', background: 'var(--background, #0f141a)' }}>
+      <main className="main-content" style={{ width: '100%', maxWidth: '1440px', margin: '0 auto', padding: '20px' }}>
         {/* Navigation / Header */}
         <header
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '24px',
+            marginBottom: '20px',
+            paddingBottom: '12px',
+            borderBottom: '1px solid var(--outline-variant, #3c4a42)',
             flexWrap: 'wrap',
             gap: '12px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <button
               onClick={onBack}
+              className="alarm-annunciator"
               style={{
-                background: 'rgba(56, 189, 248, 0.15)',
-                color: '#38bdf8',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
-                padding: '8px 16px',
-                borderRadius: '6px',
+                background: 'var(--surface-container-high, #252a31)',
+                color: 'var(--primary, #4edea3)',
+                border: '1px solid var(--outline-variant, #3c4a42)',
+                padding: '6px 12px',
+                borderRadius: 'var(--rounded-sm, 0.125rem)',
                 cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '0.88rem',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
               }}
             >
               <span>←</span>
-              <span>Back to Overview</span>
+              <span>SCADA OVERVIEW</span>
             </button>
             <div>
-              <h1 style={{ fontSize: '1.4rem', margin: 0, color: 'var(--text, #e2e8f0)', fontWeight: 800 }}>
-                ESP32-CAM Video Monitoring Room
+              <h1 className="headline-panel" style={{ fontSize: '18px', margin: 0, color: 'var(--on-surface, #dee3eb)' }}>
+                ESP32-CAM Industrial Surveillance Feed
               </h1>
-              <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: 'var(--muted, #94a3b8)' }}>
-                Direct low-latency MJPEG feeds from wireless cameras on conveyor belt hotspot
+              <p className="body-dense" style={{ margin: '2px 0 0', color: 'var(--on-surface-variant, #bbcabf)' }}>
+                Low-latency MJPEG operator feed channels direct from conveyor optical sensor nodes
               </p>
             </div>
           </div>
@@ -59,12 +60,13 @@ const CameraPage = ({ onBack, telemetryData }) => {
 
         {/* Real-time Telemetry Status Bar */}
         <div
+          className="panel"
           style={{
-            marginTop: '24px',
-            background: 'var(--panel, #1e293b)',
-            border: '1px solid var(--panel-border, rgba(148, 163, 184, 0.2))',
-            borderRadius: '8px',
-            padding: '14px 20px',
+            marginTop: '20px',
+            background: 'var(--surface-container, #1b2026)',
+            border: '1px solid var(--outline-variant, #3c4a42)',
+            borderRadius: 'var(--rounded, 0.25rem)',
+            padding: '12px 16px',
             display: 'flex',
             justifyContent: 'space-around',
             alignItems: 'center',
@@ -73,50 +75,50 @@ const CameraPage = ({ onBack, telemetryData }) => {
           }}
         >
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--muted, #94a3b8)', textTransform: 'uppercase' }}>
+            <div className="label-caps" style={{ color: 'var(--on-surface-variant, #bbcabf)' }}>
               Motor Temperature
             </div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#38bdf8' }}>
+            <div className="display-process-val" style={{ fontSize: '20px', color: 'var(--primary, #4edea3)' }}>
               {kpis.average_temperature ? `${kpis.average_temperature.toFixed(1)} °C` : '--'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--muted, #94a3b8)', textTransform: 'uppercase' }}>
+            <div className="label-caps" style={{ color: 'var(--on-surface-variant, #bbcabf)' }}>
               Vibration RMS
             </div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#38bdf8' }}>
+            <div className="display-process-val" style={{ fontSize: '20px', color: 'var(--secondary, #adc6ff)' }}>
               {kpis.rms_vibration ? `${kpis.rms_vibration.toFixed(2)} mm/s` : '--'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--muted, #94a3b8)', textTransform: 'uppercase' }}>
+            <div className="label-caps" style={{ color: 'var(--on-surface-variant, #bbcabf)' }}>
               Motor Current
             </div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#22c55e' }}>
+            <div className="display-process-val" style={{ fontSize: '20px', color: 'var(--primary, #4edea3)' }}>
               {kpis.motor_current ? `${kpis.motor_current.toFixed(2)} A` : '--'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--muted, #94a3b8)', textTransform: 'uppercase' }}>
+            <div className="label-caps" style={{ color: 'var(--on-surface-variant, #bbcabf)' }}>
               Acoustic Noise
             </div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#facc15' }}>
+            <div className="display-process-val" style={{ fontSize: '20px', color: 'var(--tertiary, #ffb95f)' }}>
               {kpis.acoustic_db ? `${kpis.acoustic_db.toFixed(1)} dB` : '--'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--muted, #94a3b8)', textTransform: 'uppercase' }}>
+            <div className="label-caps" style={{ color: 'var(--on-surface-variant, #bbcabf)' }}>
               Active Alerts
             </div>
             <div
+              className="display-process-val"
               style={{
-                fontSize: '1.15rem',
-                fontWeight: 700,
-                color: (kpis.active_alerts || 0) > 0 ? '#ef4444' : '#22c55e',
+                fontSize: '20px',
+                color: (kpis.active_alerts || 0) > 0 ? 'var(--error, #ffb4ab)' : 'var(--primary, #4edea3)',
               }}
             >
               {kpis.active_alerts ?? 0}

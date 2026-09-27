@@ -109,13 +109,6 @@ body {
     text-transform: uppercase;
 }
 
-.sidebar h2::before {
-    content: "◆";
-    display: inline-block;
-    margin-right: 9px;
-    color: var(--cyan);
-    font-size: 12px;
-}
 
 .sidebar nav {
     display: grid;

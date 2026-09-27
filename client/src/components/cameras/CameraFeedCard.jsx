@@ -53,10 +53,10 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: '8px',
+        borderRadius: 'var(--rounded, 0.25rem)',
         overflow: 'hidden',
-        background: '#0b1329',
-        border: '1px solid var(--panel-border, rgba(148, 163, 184, 0.2))',
+        background: 'var(--surface-container-low, #171c22)',
+        border: '1px solid var(--outline-variant, #3c4a42)',
         position: 'relative',
       }}
     >
@@ -66,9 +66,9 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '10px 16px',
-          background: 'rgba(15, 23, 42, 0.85)',
-          borderBottom: '1px solid rgba(148, 163, 184, 0.12)',
+          padding: '8px 12px',
+          background: 'var(--surface-container-high, #252a31)',
+          borderBottom: '1px solid var(--outline-variant, #3c4a42)',
           flexWrap: 'wrap',
           gap: '8px',
         }}
@@ -76,29 +76,29 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <span
             style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: isLive && !hasError ? '#22c55e' : '#ef4444',
-              boxShadow: isLive && !hasError ? '0 0 8px #22c55e' : '0 0 6px #ef4444',
+              width: '6px',
+              height: '6px',
+              borderRadius: '1px',
+              background: isLive && !hasError ? 'var(--primary, #4edea3)' : 'var(--error, #ffb4ab)',
             }}
           />
-          <strong style={{ fontSize: '0.9rem', color: 'var(--text, #e2e8f0)' }}>{label}</strong>
+          <strong className="body-dense-bold" style={{ color: 'var(--on-surface, #dee3eb)' }}>{label}</strong>
           <code
+            className="telemetry-data"
             style={{
-              fontSize: '0.75rem',
-              color: '#38bdf8',
-              background: 'rgba(0,0,0,0.4)',
-              padding: '2px 8px',
-              borderRadius: '4px',
-              border: '1px solid rgba(56, 189, 248, 0.2)',
+              fontSize: '11px',
+              color: 'var(--secondary, #adc6ff)',
+              background: 'var(--surface-container-highest, #30353c)',
+              padding: '2px 6px',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
+              border: '1px solid var(--outline-variant, #3c4a42)',
             }}
           >
             {ip}:{port}
           </code>
         </div>
 
-        <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={{ display: 'flex', gap: '4px' }}>
           <button
             onClick={() => {
               setEditIp(ip);
@@ -106,17 +106,18 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
               setIsEditing((p) => !p);
             }}
             title="Configure Camera IP & Port"
+            className="alarm-annunciator"
             style={{
-              background: isEditing ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
-              color: '#38bdf8',
-              borderRadius: '4px',
+              background: isEditing ? 'var(--surface-container-highest, #30353c)' : 'var(--surface-container, #1b2026)',
+              border: '1px solid var(--outline-variant, #3c4a42)',
+              color: 'var(--secondary, #adc6ff)',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
               padding: '4px 8px',
               cursor: 'pointer',
-              fontSize: '0.8rem',
+              fontSize: '10px',
             }}
           >
-            ⚙️ Edit IP
+            EDIT IP
           </button>
           <button
             onClick={() => {
@@ -124,48 +125,50 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
               handleReload();
             }}
             title={useProxy ? "Relay Proxy active (/api/stream). Click to switch to Direct." : "Direct ESP32 active. Click to switch to Relay Proxy."}
+            className="alarm-annunciator"
             style={{
-              background: useProxy ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255,255,255,0.08)',
-              border: useProxy ? '1px solid #38bdf8' : 'none',
-              color: useProxy ? '#38bdf8' : '#94a3b8',
-              borderRadius: '4px',
+              background: useProxy ? 'var(--on-secondary, #002e6a)' : 'var(--surface-container, #1b2026)',
+              border: `1px solid ${useProxy ? 'var(--secondary-container, #0566d9)' : 'var(--outline-variant, #3c4a42)'}`,
+              color: useProxy ? 'var(--secondary, #adc6ff)' : 'var(--on-surface-variant, #bbcabf)',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
               padding: '4px 8px',
               cursor: 'pointer',
-              fontSize: '0.78rem',
-              fontWeight: 600,
+              fontSize: '10px',
             }}
           >
-            {useProxy ? '📡 Proxy' : '🌐 Direct'}
+            {useProxy ? 'PROXY' : 'DIRECT'}
           </button>
           <button
             onClick={handleReload}
             title="Reload Video Stream"
+            className="alarm-annunciator"
             style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: 'none',
-              color: '#94a3b8',
-              borderRadius: '4px',
+              background: 'var(--surface-container, #1b2026)',
+              border: '1px solid var(--outline-variant, #3c4a42)',
+              color: 'var(--on-surface-variant, #bbcabf)',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
               padding: '4px 8px',
               cursor: 'pointer',
-              fontSize: '0.8rem',
+              fontSize: '10px',
             }}
           >
-            🔄
+            RELOAD
           </button>
           <button
             onClick={handleToggleFullscreen}
             title="Fullscreen"
+            className="alarm-annunciator"
             style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: 'none',
-              color: '#94a3b8',
-              borderRadius: '4px',
+              background: 'var(--surface-container, #1b2026)',
+              border: '1px solid var(--outline-variant, #3c4a42)',
+              color: 'var(--on-surface-variant, #bbcabf)',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
               padding: '4px 8px',
               cursor: 'pointer',
-              fontSize: '0.8rem',
+              fontSize: '10px',
             }}
           >
-            ⛶
+            FULL
           </button>
         </div>
       </div>
@@ -193,7 +196,7 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
             placeholder="e.g. 10.42.0.118"
             style={{
               background: 'rgba(0,0,0,0.5)',
-              border: '1px solid #38bdf8',
+              border: '1px solid var(--secondary, #adc6ff)',
               color: '#fff',
               padding: '4px 8px',
               borderRadius: '4px',
@@ -209,7 +212,7 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
             placeholder="81"
             style={{
               background: 'rgba(0,0,0,0.5)',
-              border: '1px solid #38bdf8',
+              border: '1px solid var(--secondary, #adc6ff)',
               color: '#fff',
               padding: '4px 8px',
               borderRadius: '4px',
@@ -290,7 +293,7 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
           <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>
             <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📡</div>
             <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#e2e8f0' }}>Connecting to ESP32-CAM stream...</div>
-            <div style={{ fontSize: '0.78rem', color: '#38bdf8', marginTop: '6px' }}>{streamUrl}</div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--secondary, #adc6ff)', marginTop: '6px' }}>{streamUrl}</div>
           </div>
         )}
 
@@ -307,7 +310,7 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
             <div style={{ fontSize: '2.4rem', marginBottom: '10px' }}>📹❌</div>
             <h4 style={{ margin: '0 0 6px', fontSize: '1rem', color: '#f87171' }}>Camera Stream Offline</h4>
             <p style={{ margin: '0 0 14px', fontSize: '0.82rem', color: '#94a3b8', lineHeight: 1.4 }}>
-              Unable to reach MJPEG feed at <code style={{ color: '#38bdf8' }}>{streamUrl}</code>. Ensure the ESP32-CAM is powered and connected to the Pi Wi-Fi hotspot.
+              Unable to reach MJPEG feed at <code style={{ color: 'var(--secondary, #adc6ff)' }}>{streamUrl}</code>. Ensure the ESP32-CAM is powered and connected to the Pi Wi-Fi hotspot.
             </p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
               <button
@@ -333,7 +336,7 @@ const CameraFeedCard = ({ camera, onUpdateCamera }) => {
                 }}
                 style={{
                   background: 'rgba(56, 189, 248, 0.15)',
-                  color: '#38bdf8',
+                  color: 'var(--secondary, #adc6ff)',
                   border: '1px solid rgba(56, 189, 248, 0.4)',
                   padding: '7px 14px',
                   borderRadius: '4px',
