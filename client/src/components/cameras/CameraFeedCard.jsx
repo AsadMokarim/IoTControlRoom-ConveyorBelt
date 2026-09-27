@@ -1,0 +1,391 @@
+import React, { useState, useRef } from 'react';
+
+const CameraFeedCard = ({ camera, onUpdateCamera }) => {
+  const { id, label, ip, port = 81, streamPath = '/stream' } = camera;
+  const [retryKey, setRetryKey] = useState(0);
+  const [isLive, setIsLive] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editIp, setEditIp] = useState(ip);
+  const [editPort, setEditPort] = useState(port);
+  const cardRef = useRef(null);
+
+  const [useProxy, setUseProxy] = useState(() => {
+    return Boolean(camera.proxyUrl || id === 'cam_1');
+  });
+
+  const baseStreamUrl = useProxy
+    ? (camera.proxyUrl || '/api/stream')
+    : `http://${ip}:${port}${streamPath}`;
+  const streamUrl = `${baseStreamUrl}${baseStreamUrl.includes('?') ? '&' : '?'}t=${retryKey}`;
+
+  const handleReload = () => {
+    setHasError(false);
+    setIsLive(false);
+    setRetryKey(Date.now());
+  };
+
+  const handleToggleFullscreen = () => {
+    if (!cardRef.current) return;
+    if (!document.fullscreenElement) {
+      cardRef.current.requestFullscreen().catch((err) => {
+        console.warn('Fullscreen error:', err);
+      });
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  const handleSaveIp = (e) => {
+    e.preventDefault();
+    if (!editIp.trim()) return;
+    setIsEditing(false);
+    if (onUpdateCamera) {
+      onUpdateCamera(id, editIp.trim(), Number(editPort) || 81);
+    }
+    handleReload();
+  };
+
+  return (
+    <div
+      ref={cardRef}
+      className="panel"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 'var(--rounded, 0.25rem)',
+        overflow: 'hidden',
+        background: 'var(--surface-container-low, #171c22)',
+        border: '1px solid var(--outline-variant, #3c4a42)',
+        position: 'relative',
+      }}
+    >
+      {/* Camera Header Bar */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '8px 12px',
+          background: 'var(--surface-container-high, #252a31)',
+          borderBottom: '1px solid var(--outline-variant, #3c4a42)',
+          flexWrap: 'wrap',
+          gap: '8px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span
+            style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '1px',
+              background: isLive && !hasError ? 'var(--primary, #4edea3)' : 'var(--error, #ffb4ab)',
+            }}
+          />
+          <strong className="body-dense-bold" style={{ color: 'var(--on-surface, #dee3eb)' }}>{label}</strong>
+          <code
+            className="telemetry-data"
+            style={{
+              fontSize: '11px',
+              color: 'var(--secondary, #adc6ff)',
+              background: 'var(--surface-container-highest, #30353c)',
+              padding: '2px 6px',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
+              border: '1px solid var(--outline-variant, #3c4a42)',
+            }}
+          >
+            {ip}:{port}
+          </code>
+        </div>
+
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button
+            onClick={() => {
+              setEditIp(ip);
+              setEditPort(port);
+              setIsEditing((p) => !p);
+            }}
+            title="Configure Camera IP & Port"
+            className="alarm-annunciator"
+            style={{
+              background: isEditing ? 'var(--surface-container-highest, #30353c)' : 'var(--surface-container, #1b2026)',
+              border: '1px solid var(--outline-variant, #3c4a42)',
+              color: 'var(--secondary, #adc6ff)',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              fontSize: '10px',
+            }}
+          >
+            EDIT IP
+          </button>
+          <button
+            onClick={() => {
+              setUseProxy((p) => !p);
+              handleReload();
+            }}
+            title={useProxy ? "Relay Proxy active (/api/stream). Click to switch to Direct." : "Direct ESP32 active. Click to switch to Relay Proxy."}
+            className="alarm-annunciator"
+            style={{
+              background: useProxy ? 'var(--on-secondary, #002e6a)' : 'var(--surface-container, #1b2026)',
+              border: `1px solid ${useProxy ? 'var(--secondary-container, #0566d9)' : 'var(--outline-variant, #3c4a42)'}`,
+              color: useProxy ? 'var(--secondary, #adc6ff)' : 'var(--on-surface-variant, #bbcabf)',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              fontSize: '10px',
+            }}
+          >
+            {useProxy ? 'PROXY' : 'DIRECT'}
+          </button>
+          <button
+            onClick={handleReload}
+            title="Reload Video Stream"
+            className="alarm-annunciator"
+            style={{
+              background: 'var(--surface-container, #1b2026)',
+              border: '1px solid var(--outline-variant, #3c4a42)',
+              color: 'var(--on-surface-variant, #bbcabf)',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              fontSize: '10px',
+            }}
+          >
+            RELOAD
+          </button>
+          <button
+            onClick={handleToggleFullscreen}
+            title="Fullscreen"
+            className="alarm-annunciator"
+            style={{
+              background: 'var(--surface-container, #1b2026)',
+              border: '1px solid var(--outline-variant, #3c4a42)',
+              color: 'var(--on-surface-variant, #bbcabf)',
+              borderRadius: 'var(--rounded-sm, 0.125rem)',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              fontSize: '10px',
+            }}
+          >
+            FULL
+          </button>
+        </div>
+      </div>
+
+      {/* Inline IP Editing Bar */}
+      {isEditing && (
+        <form
+          onSubmit={handleSaveIp}
+          style={{
+            background: 'rgba(15, 23, 42, 0.95)',
+            borderBottom: '1px solid rgba(56, 189, 248, 0.3)',
+            padding: '10px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            flexWrap: 'wrap',
+            zIndex: 10,
+          }}
+        >
+          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Camera IP:</span>
+          <input
+            type="text"
+            value={editIp}
+            onChange={(e) => setEditIp(e.target.value)}
+            placeholder="e.g. 10.42.0.118"
+            style={{
+              background: 'rgba(0,0,0,0.5)',
+              border: '1px solid var(--secondary, #adc6ff)',
+              color: '#fff',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '0.82rem',
+              width: '140px',
+            }}
+          />
+          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Port:</span>
+          <input
+            type="number"
+            value={editPort}
+            onChange={(e) => setEditPort(e.target.value)}
+            placeholder="81"
+            style={{
+              background: 'rgba(0,0,0,0.5)',
+              border: '1px solid var(--secondary, #adc6ff)',
+              color: '#fff',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '0.82rem',
+              width: '60px',
+            }}
+          />
+          <button
+            type="submit"
+            style={{
+              background: '#0284c7',
+              color: '#fff',
+              border: 'none',
+              padding: '5px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+            }}
+          >
+            Save & Connect
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsEditing(false)}
+            style={{
+              background: 'transparent',
+              color: '#94a3b8',
+              border: '1px solid rgba(255,255,255,0.2)',
+              padding: '5px 10px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+            }}
+          >
+            Cancel
+          </button>
+        </form>
+      )}
+
+      {/* Video Stream Area */}
+      <div
+        style={{
+          width: '100%',
+          height: '340px',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#050a14',
+        }}
+      >
+        {!hasError ? (
+          <img
+            key={retryKey}
+            src={streamUrl}
+            alt={label}
+            onLoad={() => {
+              setIsLive(true);
+              setHasError(false);
+            }}
+            onError={() => {
+              setHasError(true);
+              setIsLive(false);
+            }}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              display: isLive ? 'block' : 'none',
+              background: '#000',
+            }}
+          />
+        ) : null}
+
+        {/* Loading State */}
+        {!isLive && !hasError && (
+          <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📡</div>
+            <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#e2e8f0' }}>Connecting to ESP32-CAM stream...</div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--secondary, #adc6ff)', marginTop: '6px' }}>{streamUrl}</div>
+          </div>
+        )}
+
+        {/* Offline Error Fallback */}
+        {hasError && (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '24px',
+              maxWidth: '420px',
+              color: '#cbd5e1',
+            }}
+          >
+            <div style={{ fontSize: '2.4rem', marginBottom: '10px' }}>📹❌</div>
+            <h4 style={{ margin: '0 0 6px', fontSize: '1rem', color: '#f87171' }}>Camera Stream Offline</h4>
+            <p style={{ margin: '0 0 14px', fontSize: '0.82rem', color: '#94a3b8', lineHeight: 1.4 }}>
+              Unable to reach MJPEG feed at <code style={{ color: 'var(--secondary, #adc6ff)' }}>{streamUrl}</code>. Ensure the ESP32-CAM is powered and connected to the Pi Wi-Fi hotspot.
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+              <button
+                onClick={handleReload}
+                style={{
+                  background: '#0284c7',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                }}
+              >
+                🔄 Retry Connection
+              </button>
+              <button
+                onClick={() => {
+                  setEditIp(ip);
+                  setEditPort(port);
+                  setIsEditing(true);
+                }}
+                style={{
+                  background: 'rgba(56, 189, 248, 0.15)',
+                  color: 'var(--secondary, #adc6ff)',
+                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                  padding: '7px 14px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                }}
+              >
+                ⚙️ Change IP
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Live Badge Overlay when active */}
+        {isLive && !hasError && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '12px',
+              left: '12px',
+              padding: '4px 10px',
+              borderRadius: '4px',
+              background: 'rgba(0,0,0,0.75)',
+              color: '#22c55e',
+              border: '1px solid rgba(34, 197, 94, 0.4)',
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              letterSpacing: '0.05em',
+            }}
+          >
+            <span
+              style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                background: '#22c55e',
+                boxShadow: '0 0 8px #22c55e',
+              }}
+            />
+            LIVE FEED ({ip})
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CameraFeedCard;
