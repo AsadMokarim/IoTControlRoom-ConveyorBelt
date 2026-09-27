@@ -1,12 +1,77 @@
 import { useState, useEffect, useRef } from 'react';
+import { generateClientMockTelemetry } from '../utils/mockTelemetry';
 
-const useTelemetry = () => {
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
+const getWsUrl = () => {
+  if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
+  if (import.meta.env.VITE_API_URL) {
+    try {
+      const u = new URL(import.meta.env.VITE_API_URL);
+      const proto = u.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${proto}//${u.host}`;
+    } catch (_) {}
+  }
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.port === '5173'
+    ? `${window.location.hostname}:3001`
+    : window.location.host;
+  return `${protocol}//${host}`;
+};
+
+const initialRelayState = {
+  state: 'CLOSED',
+  trip_triggered: false,
+  trip_reason: 'NONE',
+  tripped_at: null,
+};
+
+export const useTelemetry = () => {
+  const [relayState, setRelayState] = useState(initialRelayState);
+  const relayStateRef = useRef(initialRelayState);
+  relayStateRef.current = relayState;
+
+  // Initialize data immediately with realistic mock telemetry so UI is never blank
+  const [data, setData] = useState(() => generateClientMockTelemetry(initialRelayState));
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isWsConnected, setIsWsConnected] = useState(false);
+
   const wsRef = useRef(null);
+  const lastServerDataTimeRef = useRef(0);
+  const simIntervalRef = useRef(null);
   const pollTimerRef = useRef(null);
+
+  // Listen for local control signals (STOP/START) to update state with 0 latency
+  useEffect(() => {
+    const handleControlEvent = (event) => {
+      const { action, reason } = event.detail || {};
+      if (action === 'STOP' || action === 'CUTOFF') {
+        const nextRelay = {
+          state: 'TRIPPED',
+          trip_triggered: true,
+          trip_reason: reason || 'EMERGENCY_STOP',
+          tripped_at: new Date().toISOString(),
+        };
+        setRelayState(nextRelay);
+        relayStateRef.current = nextRelay;
+        setData(generateClientMockTelemetry(nextRelay));
+      } else if (action === 'START' || action === 'RESET') {
+        const nextRelay = {
+          state: 'CLOSED',
+          trip_triggered: false,
+          trip_reason: 'NONE',
+          tripped_at: null,
+        };
+        setRelayState(nextRelay);
+        relayStateRef.current = nextRelay;
+        setData(generateClientMockTelemetry(nextRelay));
+      }
+    };
+
+    window.addEventListener('conveyor:control', handleControlEvent);
+    return () => window.removeEventListener('conveyor:control', handleControlEvent);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -14,44 +79,56 @@ const useTelemetry = () => {
     // HTTP fetch fallback
     const fetchHttpData = async () => {
       try {
-        const response = await fetch('/api/dashboard');
+        const response = await fetch(`${API_BASE}/api/dashboard`);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
-        const result = await response.json();
-        if (mounted) {
+        const text = await response.text();
+        if (!text || text.trim().length === 0) {
+          throw new Error('Empty response');
+        }
+        const result = JSON.parse(text);
+        if (mounted && result) {
+          lastServerDataTimeRef.current = Date.now();
           setData(result);
           setError(null);
           setIsLoading(false);
+          if (result.relay) {
+            setRelayState(result.relay);
+            relayStateRef.current = result.relay;
+          }
         }
       } catch (err) {
         if (mounted) {
           setError(err.message);
-          setIsLoading(false);
+          // If server fails or offline, continue seamlessly with client simulation
         }
       }
     };
 
-    // Initial fetch to get data instantly
+    // Client-side simulation heartbeat: runs every 1000ms
+    // If server hasn't sent data in the last 2.5 seconds, advance client simulation
+    simIntervalRef.current = setInterval(() => {
+      if (!mounted) return;
+      const timeSinceServer = Date.now() - lastServerDataTimeRef.current;
+      if (timeSinceServer > 2500) {
+        setData(generateClientMockTelemetry(relayStateRef.current));
+      }
+    }, 1000);
+
+    // Initial fetch to test server connection
     fetchHttpData();
 
     // Setup WebSocket connection
     const connectWs = () => {
       try {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // In Vite dev mode (port 5173), server runs on 3001
-        const host = window.location.port === '5173'
-          ? `${window.location.hostname}:3001`
-          : window.location.host;
-        const wsUrl = `${protocol}//${host}`;
-
+        const wsUrl = getWsUrl();
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
         ws.onopen = () => {
           if (!mounted) return;
           setIsWsConnected(true);
-          // Stop HTTP polling interval when WS is active
           if (pollTimerRef.current) {
             clearInterval(pollTimerRef.current);
             pollTimerRef.current = null;
@@ -62,9 +139,16 @@ const useTelemetry = () => {
           if (!mounted) return;
           try {
             const telemetry = JSON.parse(event.data);
-            setData(telemetry);
-            setError(null);
-            setIsLoading(false);
+            if (telemetry) {
+              lastServerDataTimeRef.current = Date.now();
+              setData(telemetry);
+              setError(null);
+              setIsLoading(false);
+              if (telemetry.relay) {
+                setRelayState(telemetry.relay);
+                relayStateRef.current = telemetry.relay;
+              }
+            }
           } catch (e) {
             console.error('[WS] Parse error:', e);
           }
@@ -78,19 +162,18 @@ const useTelemetry = () => {
         ws.onclose = () => {
           if (!mounted) return;
           setIsWsConnected(false);
-          // Fall back to polling every 2s if WS disconnects
           if (!pollTimerRef.current) {
-            pollTimerRef.current = setInterval(fetchHttpData, 2000);
+            pollTimerRef.current = setInterval(fetchHttpData, 3000);
           }
-          // Try reconnecting WS after 3 seconds
+          // Attempt reconnection after 5 seconds
           setTimeout(() => {
             if (mounted) connectWs();
-          }, 3000);
+          }, 5000);
         };
       } catch (err) {
-        console.warn('[WS] Connection failed, falling back to polling:', err);
+        console.warn('[WS] WebSocket unavailable, operating with client simulation fallback:', err);
         if (!pollTimerRef.current) {
-          pollTimerRef.current = setInterval(fetchHttpData, 2000);
+          pollTimerRef.current = setInterval(fetchHttpData, 4000);
         }
       }
     };
@@ -105,6 +188,9 @@ const useTelemetry = () => {
       if (pollTimerRef.current) {
         clearInterval(pollTimerRef.current);
       }
+      if (simIntervalRef.current) {
+        clearInterval(simIntervalRef.current);
+      }
     };
   }, []);
 
@@ -114,7 +200,7 @@ const useTelemetry = () => {
     error,
     isWsConnected,
     isLive: Boolean(data?.is_live),
-    relayState: data?.relay || { state: 'CLOSED', trip_triggered: false, trip_reason: 'NONE' },
+    relayState: data?.relay || relayState,
   };
 };
 

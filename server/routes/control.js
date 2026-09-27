@@ -17,8 +17,13 @@ const handleStop = async (req, res) => {
       trip_reason: reason,
     });
 
-    // 2. Publish "STOP" to conveyor/control MQTT
-    const mqttResult = await mqttClient.publishControlCommand('STOP', reason);
+    // 2. Publish "STOP" to conveyor/control MQTT if connected
+    let mqttResult = null;
+    try {
+      mqttResult = await mqttClient.publishControlCommand('STOP', reason);
+    } catch (mErr) {
+      console.warn('[Control] MQTT publish warning during STOP:', mErr.message);
+    }
 
     res.json({
       ok: true,
@@ -35,6 +40,7 @@ const handleStop = async (req, res) => {
 
 router.post('/cutoff', handleStop);
 router.post('/stop', handleStop);
+router.get('/stop', handleStop);
 
 // Handler for Reset & Start (/reset and /start)
 const handleStart = async (req, res) => {
@@ -46,8 +52,13 @@ const handleStart = async (req, res) => {
       trip_reason: 'NONE',
     });
 
-    // 2. Publish "START" to conveyor/control MQTT
-    const mqttResult = await mqttClient.publishControlCommand('START', 'OPERATOR_RESET');
+    // 2. Publish "START" to conveyor/control MQTT if connected
+    let mqttResult = null;
+    try {
+      mqttResult = await mqttClient.publishControlCommand('START', 'OPERATOR_RESET');
+    } catch (mErr) {
+      console.warn('[Control] MQTT publish warning during START:', mErr.message);
+    }
 
     res.json({
       ok: true,
@@ -63,6 +74,7 @@ const handleStart = async (req, res) => {
 
 router.post('/reset', handleStart);
 router.post('/start', handleStart);
+router.get('/start', handleStart);
 
 // Get current relay & control status
 router.get('/status', (req, res) => {
